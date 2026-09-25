@@ -13,6 +13,7 @@ import {
   X,
   Check
 } from 'lucide-react';
+import { WorkerBadge } from '../components/common/WorkerBadge';
 
 export const FavouritesPage: React.FC = () => {
   const { 
@@ -182,8 +183,21 @@ export const FavouritesPage: React.FC = () => {
               {/* Top Row: Avatar, Name, Category & Heart Toggle */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-lg font-black shrink-0 shadow-2xs">
-                    {worker.initial}
+                  <div className="relative shrink-0">
+                    {worker.avatar ? (
+                      <img 
+                        src={worker.avatar} 
+                        alt={worker.name} 
+                        className="w-12 h-12 rounded-2xl object-cover border border-slate-200/90 shadow-2xs" 
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-lg font-black shadow-2xs">
+                        {worker.initial}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-1.5 -right-1.5 z-10">
+                      <WorkerBadge rating={worker.rating} size="sm" />
+                    </div>
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
