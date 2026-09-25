@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { WORKERS_DATABASE } from '../data/mockData';
 import { ChevronLeft, Star, Heart, Check, Plus, MapPin, Sparkles, Send, ArrowRight } from 'lucide-react';
-import { WorkerBadge } from '../components/common/WorkerBadge';
 
 export const WorkersListPage: React.FC = () => {
   const { 
@@ -128,7 +127,7 @@ export const WorkersListPage: React.FC = () => {
               <div className="p-3.5 sm:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Modern Squared-Circle Avatar with Active Status Dot & Rating Badge */}
+                    {/* Modern Squared-Circle Avatar with Active Status Dot */}
                     <div className="relative shrink-0">
                       {worker.avatar ? (
                         <img
@@ -144,13 +143,9 @@ export const WorkersListPage: React.FC = () => {
                       )}
                       {/* Active green status indicator */}
                       <span 
-                        className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-2xs" 
+                        className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-2xs" 
                         title="Available now" 
                       />
-                      {/* Rating Tier Badge attached to bottom of profile image */}
-                      <div className="absolute -bottom-2 -right-1.5 z-10">
-                        <WorkerBadge rating={worker.rating} size="md" />
-                      </div>
                     </div>
 
                     {/* Worker Name, Rating & Distance */}

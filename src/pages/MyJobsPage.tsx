@@ -11,7 +11,6 @@ import {
   Zap,
   ClipboardList
 } from 'lucide-react';
-import { WorkerBadge } from '../components/common/WorkerBadge';
 
 export const MyJobsPage: React.FC = () => {
   const { 
@@ -118,17 +117,8 @@ export const MyJobsPage: React.FC = () => {
           <div className="pt-1 border-t border-slate-100 space-y-2.5">
             <div className="flex items-center justify-between text-xs bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 font-medium">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative shrink-0">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-[#185E3B] text-xs">
-                    {matchedWorker.avatar ? (
-                      <img src={matchedWorker.avatar} alt={matchedWorker.name} className="w-8 h-8 rounded-xl object-cover" />
-                    ) : (
-                      matchedWorker.initial
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 z-10">
-                    <WorkerBadge rating={matchedWorker.rating} size="sm" />
-                  </div>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-[#185E3B] text-xs shrink-0">
+                  {matchedWorker.initial}
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-slate-900 block leading-tight truncate">{matchedWorker.name}</span>

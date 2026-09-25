@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext';
 import { RURAL_LOCATIONS, WORKERS_DATABASE } from '../../data/mockData';
 import { MapPin, Check, X, AlertCircle, Star, Heart } from 'lucide-react';
 import { JobDetailsModal } from './JobDetailsModal';
-import { WorkerBadge } from '../common/WorkerBadge';
 
 export const Modals: React.FC = () => {
   const {
@@ -265,9 +264,7 @@ export const Modals: React.FC = () => {
                       {matchedWorker.initial}
                     </div>
                   )}
-                  <div className="absolute -bottom-2 -right-1.5 z-10">
-                    <WorkerBadge rating={matchedWorker.rating} size="sm" />
-                  </div>
+                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-2xs" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-bold text-slate-900 truncate">

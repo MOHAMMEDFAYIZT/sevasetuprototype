@@ -21,7 +21,6 @@ import {
   ArrowRight,
   Heart
 } from 'lucide-react';
-import { WorkerBadge } from '../components/common/WorkerBadge';
 
 export const JobDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -223,17 +222,8 @@ export const JobDetailsPage: React.FC = () => {
             {job.status === 'matched' && matchedWorker && (
             <div className="space-y-3.5">
               <div className="flex items-center gap-3">
-                <div className="relative shrink-0">
-                  <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-xl font-black shadow-2xs overflow-hidden">
-                    {matchedWorker.avatar ? (
-                      <img src={matchedWorker.avatar} alt={matchedWorker.name} className="w-13 h-13 rounded-2xl object-cover" />
-                    ) : (
-                      matchedWorker.initial
-                    )}
-                  </div>
-                  <div className="absolute -bottom-2 -right-1.5 z-10">
-                    <WorkerBadge rating={matchedWorker.rating} size="md" />
-                  </div>
+                <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-xl font-black shrink-0 shadow-2xs">
+                  {matchedWorker.initial}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
