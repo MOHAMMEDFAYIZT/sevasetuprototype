@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { UserProfile, Job, AppScreen, Worker } from '../types';
 import { INITIAL_JOBS, WORKERS_DATABASE } from '../data/mockData';
 
@@ -61,6 +61,7 @@ interface AppContextType {
   // Modals & Feedback
   toast: string | null;
   showToast: (msg: string) => void;
+  hideToast: () => void;
   isCreateJobModalOpen: boolean;
   openCreateJobModal: (cat?: string) => void;
   closeCreateJobModal: () => void;
@@ -152,11 +153,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('SEVA_SETU_JOBS_V3', JSON.stringify(jobs));
   }, [jobs]);
 
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hideToast = () => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    setToast(null);
+  };
+
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
     setToast(msg);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToast(null);
-    }, 2400);
+      toastTimerRef.current = null;
+    }, 2600);
   };
 
   const updateUser = (updates: Partial<UserProfile>) => {
@@ -610,6 +625,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         simulateResetJob,
         toast,
         showToast,
+        hideToast,
         isCreateJobModalOpen,
         openCreateJobModal,
         closeCreateJobModal,

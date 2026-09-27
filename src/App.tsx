@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { Toast } from './components/common/Toast';
 
 // Direct Full-Screen Onboarding & Auth Pages (Exact matches to reference designs)
 import { SplashIntroPage } from './pages/SplashIntroPage';
@@ -20,6 +21,7 @@ export function App() {
   return (
     <AppProvider>
       <BrowserRouter>
+        <Toast />
         <Routes>
           {/* Standalone Visual Onboarding / Auth Routes */}
           <Route path="/splash" element={<SplashIntroPage />} />

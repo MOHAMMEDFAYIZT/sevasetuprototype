@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { AppHeader } from './AppHeader';
 import { BottomNav } from './BottomNav';
 import { Modals } from '../modals/Modals';
-import { Toast } from '../common/Toast';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -24,9 +23,8 @@ export const AppLayout: React.FC = () => {
       {/* Sticky Bottom Tab Bar */}
       <BottomNav />
 
-      {/* Global Modals & Notifications */}
+      {/* Global Modals */}
       <Modals />
-      <Toast />
     </div>
   );
 };
