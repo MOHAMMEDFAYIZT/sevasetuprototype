@@ -179,38 +179,37 @@ export const MyJobsPage: React.FC = () => {
             const serviceImg = getServiceIllustration(job.category);
             const isMultipleWorkers = matchedWorkers.length > 1;
 
-            const isUrgent = isJobUrgent(job);
-            const urgentInfo = getUrgentJobTimeRemaining(job);
+            // Urgent styling ONLY applies when actively searching (pending)
+            const isUrgentSearching = activeTab === 'pending' && isJobUrgent(job);
+            const urgentInfo = isUrgentSearching ? getUrgentJobTimeRemaining(job) : null;
 
             return (
               <div
                 key={job.id}
                 onClick={() => handleJobCardClick(job.id)}
                 className={`w-full bg-white rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 transition-all cursor-pointer shadow-[0_4px_16px_rgba(16,60,38,0.06)] hover:shadow-[0_8px_24px_rgba(16,60,38,0.1)] active:scale-[0.99] select-none flex flex-col group ${
-                  isUrgent 
-                    ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/20 to-white ring-1 ring-amber-300/30' 
+                  isUrgentSearching 
+                    ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/25 to-white ring-1 ring-amber-300/30' 
                     : 'border border-[#E3ECE0]'
                 }`}
               >
-                {/* Urgent top banner badge if today's urgent job */}
-                {isUrgent && (
+                {/* Urgent top banner badge if searching for today's work */}
+                {isUrgentSearching && urgentInfo && (
                   <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-amber-100">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
                       <Zap className="w-3 h-3 fill-white" />
-                      <span>Urgent • 5m match</span>
+                      <span>Today's Work</span>
                     </span>
 
-                    {activeTab === 'pending' && (
-                      urgentInfo.isExpired ? (
-                        <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
-                          Window expired
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
-                          <span>{urgentInfo.formatted} remaining</span>
-                        </span>
-                      )
+                    {urgentInfo.isExpired ? (
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                        Time ended
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                        <span>Finding worker • {urgentInfo.formatted}</span>
+                      </span>
                     )}
                   </div>
                 )}
@@ -332,11 +331,11 @@ export const MyJobsPage: React.FC = () => {
                       {/* Icon Slot: Centered 62px baseline */}
                       <div className="w-[62px] shrink-0 flex items-center justify-center">
                         <div className={`w-[34px] h-[34px] rounded-full border flex items-center justify-center shrink-0 ${
-                          isUrgent && urgentInfo.isExpired
+                          isUrgentSearching && urgentInfo?.isExpired
                             ? 'bg-amber-100 border-amber-300 text-amber-800'
                             : 'bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]'
                         }`}>
-                          {isUrgent && urgentInfo.isExpired ? (
+                          {isUrgentSearching && urgentInfo?.isExpired ? (
                             <RotateCcw className="w-4 h-4 text-amber-800" />
                           ) : (
                             <Clock className="w-4 h-4 text-[#B45309]" />
@@ -347,19 +346,19 @@ export const MyJobsPage: React.FC = () => {
                       {/* Text Details: Starts at the exact same column */}
                       <div className="min-w-0 flex-1">
                         <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E] leading-tight truncate">
-                          {isUrgent && urgentInfo.isExpired 
-                            ? 'No workers matched in 5 mins' 
+                          {isUrgentSearching && urgentInfo?.isExpired 
+                            ? 'No worker available right now' 
                             : `0 of ${job.requests.length || 1} workers accepted`}
                         </p>
                         <p className="text-[12px] sm:text-[13px] text-[#76857D] font-normal leading-tight mt-1 truncate">
-                          {isUrgent && urgentInfo.isExpired 
-                            ? 'Tap to rebroadcast or view options' 
+                          {isUrgentSearching && urgentInfo?.isExpired 
+                            ? 'Tap Request Again to retry' 
                             : 'Waiting for workers to accept'}
                         </p>
                       </div>
                     </div>
 
-                    {isUrgent && urgentInfo.isExpired ? (
+                    {isUrgentSearching && urgentInfo?.isExpired ? (
                       <button
                         type="button"
                         onClick={(e) => {

@@ -197,12 +197,12 @@ export const JobDetailsPage: React.FC = () => {
             isUrgent && getUrgentJobTimeRemaining(job).isExpired ? (
               <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5 shadow-2xs">
                 <Clock className="w-3.5 h-3.5 text-amber-700" />
-                <span>Broadcast Expired</span>
+                <span>No Worker Found</span>
               </span>
             ) : isUrgent ? (
               <span className="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs animate-pulse">
                 <Zap className="w-3.5 h-3.5 fill-white" />
-                <span>Urgent • {getUrgentJobTimeRemaining(job).formatted} left</span>
+                <span>Finding Worker • {getUrgentJobTimeRemaining(job).formatted}</span>
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200 flex items-center gap-1.5 shadow-2xs">
@@ -246,19 +246,19 @@ export const JobDetailsPage: React.FC = () => {
             <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight truncate">
               {job.category}
             </h1>
-            {isUrgent && (
+            {isUrgent && isLooking && (
               <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase tracking-wider border border-amber-300">
-                ⚡ Urgent
+                ⚡ Today's Work
               </span>
             )}
           </div>
 
-          {/* Expiry timer for pending/looking jobs (Urgent: 5m; Scheduled: 3hrs) */}
+          {/* Status timer row for pending/looking jobs */}
           {isLooking && (
             isUrgent ? (
               getUrgentJobTimeRemaining(job).isExpired ? (
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-amber-800 font-semibold">5-min window elapsed • No match</span>
+                  <span className="text-xs text-amber-800 font-semibold">No worker available right now</span>
                   <button
                     type="button"
                     onClick={() => retryUrgentJob(job.id)}
@@ -271,13 +271,13 @@ export const JobDetailsPage: React.FC = () => {
               ) : (
                 <div className="flex items-center gap-1 text-xs text-amber-800 font-bold mt-0.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>Immediate request • {getUrgentJobTimeRemaining(job).formatted} remaining</span>
+                  <span>Looking for nearby available workers • {getUrgentJobTimeRemaining(job).formatted}</span>
                 </div>
               )
             ) : (
               <div className="flex items-center gap-1 text-xs text-amber-700 font-semibold mt-0.5">
                 <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>Request valid • 2h 45m left</span>
+                <span>Request sent • 2h 45m left</span>
               </div>
             )
           )}

@@ -9,12 +9,8 @@ import {
   Languages, 
   Bell, 
   Check, 
-  Mic,
-  Clock,
-  Zap,
-  RotateCcw
+  Mic
 } from 'lucide-react';
-import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
 
 const SEARCH_PLACEHOLDERS = [
   "Search 'Electrician'...",
@@ -85,8 +81,6 @@ export const HomePage: React.FC = () => {
   const { 
     openCreateJobModal, 
     user, 
-    jobs,
-    retryUrgentJob,
     showToast,
     language,
     setLanguage
@@ -95,17 +89,6 @@ export const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-
-  // Live timer tick for urgent broadcast banner
-  const [, setTicker] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setTicker(t => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Check if there is an active/pending urgent job for today
-  const urgentJob = jobs.find(j => (j.status === 'looking' || j.status === 'matched') && isJobUrgent(j));
-  const urgentInfo = urgentJob ? getUrgentJobTimeRemaining(urgentJob) : null;
 
   // Language state for top bar
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
@@ -359,78 +342,6 @@ export const HomePage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Top Card for Urgent Job (First Card) */}
-      {urgentJob && !searchQuery && (
-        <div className="px-5 mb-5 select-none animate-slide-up">
-          <div 
-            onClick={() => navigate(`/jobs/${urgentJob.id}`)}
-            className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-[0_8px_24px_rgba(217,119,6,0.3)] border border-amber-300/40 cursor-pointer active:scale-[0.99] transition-all"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-[10px] font-extrabold uppercase tracking-wider text-white">
-                <Zap className="w-3 h-3 fill-white" />
-                <span>Urgent Request (5m Life)</span>
-              </span>
-
-              {urgentJob.status === 'looking' && urgentInfo && (
-                urgentInfo.isExpired ? (
-                  <span className="text-[11px] font-bold bg-white/25 px-2.5 py-0.5 rounded-full text-white">
-                    Window Expired
-                  </span>
-                ) : (
-                  <span className="text-xs font-bold text-white flex items-center gap-1 bg-black/20 px-2.5 py-0.5 rounded-full">
-                    <Clock className="w-3 h-3 animate-spin" />
-                    <span>{urgentInfo.formatted} left</span>
-                  </span>
-                )
-              )}
-
-              {urgentJob.status === 'matched' && (
-                <span className="text-[11px] font-bold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-                  <Check className="w-3 h-3 stroke-[3]" />
-                  <span>Matched!</span>
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-base font-bold text-white truncate">
-                  {urgentJob.category} Service
-                </h3>
-                <p className="text-xs text-amber-100 font-medium truncate mt-0.5">
-                  {urgentJob.status === 'matched'
-                    ? 'Worker confirmed! Tap to view details & phone'
-                    : urgentInfo?.isExpired
-                      ? '5-minute window finished • Tap to rebroadcast'
-                      : 'Searching nearby active workers...'}
-                </p>
-              </div>
-
-              <div className="shrink-0 flex items-center gap-2">
-                {urgentJob.status === 'looking' && urgentInfo?.isExpired ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      retryUrgentJob(urgentJob.id);
-                    }}
-                    className="px-3 py-1.5 rounded-full bg-white text-amber-800 font-bold text-xs shadow-md flex items-center gap-1 active:scale-95 transition-transform"
-                  >
-                    <RotateCcw className="w-3 h-3 stroke-[2.2]" />
-                    <span>Retry</span>
-                  </button>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Section 1: "Most Searched" (RailOne Journey Planner Style - 2 per line, 4 cards total) */}
       {filteredMostSearched.length > 0 && (

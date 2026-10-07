@@ -111,25 +111,26 @@ export const ProfilePage: React.FC = () => {
   // SUB-VIEW 1: HELP & SUPPORT PAGE (from reference HTML)
   if (activeSubView === 'help') {
     return (
-      <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
-        {/* Top Header mt-22 */}
-        <div className="flex items-center gap-3 mt-22 mb-3.5 select-none">
-          <button
-            type="button"
-            onClick={() => setActiveSubView(null)}
-            className="w-9 h-9 rounded-full bg-white hover:bg-[#E2F3DD] border border-[#CBD8CA] flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-colors shadow-2xs cursor-pointer active:scale-95"
-            title="Back to Profile"
-          >
-            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
-              Support
-            </h1>
-            <p className="text-xs text-[#4F6057] font-medium mt-0.5">
-              How can we help you?
-            </p>
-          </div>
+      <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-32 min-h-full relative">
+        {/* Back button at the top (exact match to WorkersListPage) */}
+        <button
+          type="button"
+          onClick={() => setActiveSubView(null)}
+          className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
+          title="Back to Profile"
+          aria-label="Back to Profile"
+        >
+          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+        </button>
+
+        {/* Header title at mt-22 starting at the same level as the cards */}
+        <div className="mt-22 mb-3 select-none">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
+            Support
+          </h1>
+          <p className="text-xs text-[#4F6057] font-medium mt-0.5">
+            How can we help you?
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -216,25 +217,26 @@ export const ProfilePage: React.FC = () => {
   // SUB-VIEW 2: TERMS & CONDITIONS PAGE (from reference HTML)
   if (activeSubView === 'terms') {
     return (
-      <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
-        {/* Top Header mt-22 */}
-        <div className="flex items-center gap-3 mt-22 mb-3.5 select-none">
-          <button
-            type="button"
-            onClick={() => setActiveSubView(null)}
-            className="w-9 h-9 rounded-full bg-white hover:bg-[#E2F3DD] border border-[#CBD8CA] flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-colors shadow-2xs cursor-pointer active:scale-95"
-            title="Back to Profile"
-          >
-            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
-              Terms & Conditions
-            </h1>
-            <p className="text-xs text-[#4F6057] font-medium mt-0.5">
-              Platform terms and guidelines
-            </p>
-          </div>
+      <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-32 min-h-full relative">
+        {/* Back button at the top (exact match to WorkersListPage) */}
+        <button
+          type="button"
+          onClick={() => setActiveSubView(null)}
+          className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
+          title="Back to Profile"
+          aria-label="Back to Profile"
+        >
+          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+        </button>
+
+        {/* Header title at mt-22 starting at the same level as the cards */}
+        <div className="mt-22 mb-3 select-none">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
+            Terms & Conditions
+          </h1>
+          <p className="text-xs text-[#4F6057] font-medium mt-0.5">
+            Platform terms and guidelines
+          </p>
         </div>
 
         <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-white shadow-xs space-y-4">

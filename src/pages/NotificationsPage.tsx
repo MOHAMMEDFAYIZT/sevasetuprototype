@@ -80,36 +80,37 @@ export const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
-      {/* Top Header mt-22 */}
-      <div className="flex items-center justify-between mt-22 mb-3.5 select-none">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-white hover:bg-[#E2F3DD] border border-[#CBD8CA] flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-colors shadow-2xs cursor-pointer active:scale-95 shrink-0"
-            title="Go back"
-          >
-            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
-              Notifications
-            </h1>
-            <p className="text-xs text-[#4F6057] font-medium mt-0.5">
-              Live updates on worker replies and bookings
-            </p>
-          </div>
+    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-32 min-h-full relative">
+      {/* Back button at the top (exact match to WorkersListPage) */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
+        title="Go back"
+        aria-label="Go back"
+      >
+        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+      </button>
+
+      {/* Header title at mt-22 starting at the same level as the cards */}
+      <div className="mt-22 mb-3 select-none flex items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
+            Notifications
+          </h1>
+          <p className="text-xs text-[#4F6057] font-medium mt-0.5">
+            Live updates on worker replies and bookings
+          </p>
         </div>
 
         {notifications.some(n => !n.read) && (
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="text-xs font-bold text-[#0C6B44] hover:underline flex items-center gap-1 cursor-pointer"
+            className="px-3 py-1.5 rounded-full bg-white hover:bg-[#E2F3DD] text-[#0C6B44] border border-[#CBD8CA] text-xs font-bold transition-all shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
           >
-            <Check className="w-3.5 h-3.5" />
-            <span>Mark read</span>
+            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Mark all read</span>
           </button>
         )}
       </div>

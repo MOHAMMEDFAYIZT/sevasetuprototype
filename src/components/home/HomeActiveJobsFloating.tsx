@@ -1,14 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { WORKERS_DATABASE } from '../../data/mockData';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { isJobUrgent, getUrgentJobTimeRemaining } from '../../utils/urgency';
+import { CheckCircle2, Clock, Zap, RotateCcw } from 'lucide-react';
 
 export const HomeActiveJobsFloating: React.FC = () => {
-  const { jobs } = useApp();
+  const { jobs, retryUrgentJob } = useApp();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Live timer for urgent job countdowns
+  const [, setTicker] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTicker(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Helper to parse "04:00 PM" into minutes for chronological sorting
   const parseTimeToMinutes = (timeStr?: string) => {
@@ -23,10 +31,15 @@ export const HomeActiveJobsFloating: React.FC = () => {
     return hours * 60 + minutes;
   };
 
-  // 1. Pending requests (always top priority, live search broadcast)
+  // 1. Pending requests (Urgent jobs prioritized first, then other pending jobs)
   const pendingJobs = jobs
     .filter(j => j.status === 'looking')
-    .sort((a, b) => (b.id || 0) - (a.id || 0));
+    .sort((a, b) => {
+      const aUrgent = isJobUrgent(a) ? 1 : 0;
+      const bUrgent = isJobUrgent(b) ? 1 : 0;
+      if (aUrgent !== bUrgent) return bUrgent - aUrgent;
+      return (b.id || 0) - (a.id || 0);
+    });
 
   // 2. Nearest upcoming service day's matched jobs
   const todayStr = new Date().toISOString().split('T')[0];
@@ -51,8 +64,14 @@ export const HomeActiveJobsFloating: React.FC = () => {
       .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
   }
 
-  // Combine: Pending first, followed by all confirmed jobs for the active service day
-  const activeJobs = [...pendingJobs, ...targetDayMatchedJobs];
+  // Combine: Pending first, followed by confirmed upcoming jobs, limited strictly to the first 2 jobs
+  const combinedJobs = [...pendingJobs, ...targetDayMatchedJobs];
+  // Deduplicate and take first 2 jobs
+  const uniqueJobMap = new Map<number, typeof combinedJobs[0]>();
+  combinedJobs.forEach(j => {
+    if (!uniqueJobMap.has(j.id)) uniqueJobMap.set(j.id, j);
+  });
+  const activeJobs = Array.from(uniqueJobMap.values()).slice(0, 2);
 
   if (activeJobs.length === 0) return null;
 
@@ -105,24 +124,38 @@ export const HomeActiveJobsFloating: React.FC = () => {
               : null;
             const isMatched = job.status === 'matched';
 
+            // Urgent is ONLY when looking for today's work
+            const isUrgentSearching = !isMatched && isJobUrgent(job);
+            const urgentInfo = isUrgentSearching ? getUrgentJobTimeRemaining(job) : null;
+
             return (
               <div
                 key={job.id}
                 onClick={() => navigate(`/jobs/${job.id}`)}
-                className={`relative w-full shrink-0 ${activeJobs.length > 1 ? 'min-w-[92%] snap-center' : ''} rounded-[20px] bg-[#EAF6ED]/95 backdrop-blur-md p-2.5 sm:p-3 border border-[#BDDEC4] shadow-[0_8px_24px_rgba(12,65,40,0.12)] cursor-pointer transition-all hover:bg-[#e2f2e6] active:scale-[0.99] select-none flex flex-col gap-1`}
+                className={`relative w-full shrink-0 ${activeJobs.length > 1 ? 'min-w-[92%] snap-center' : ''} rounded-[20px] backdrop-blur-md p-2.5 sm:p-3 border shadow-[0_8px_24px_rgba(12,65,40,0.12)] cursor-pointer transition-all active:scale-[0.99] select-none flex flex-col gap-1 ${
+                  isUrgentSearching
+                    ? 'bg-[#FFFBEB]/95 border-amber-300 ring-1 ring-amber-400/30 hover:bg-[#FEF3C7]'
+                    : 'bg-[#EAF6ED]/95 border-[#BDDEC4] hover:bg-[#e2f2e6]'
+                }`}
               >
                 {/* Main Content Row */}
                 <div className="flex items-center justify-between gap-2.5">
                   {/* Left: Animated Status Indicator */}
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div className={`relative flex items-center justify-center w-8 h-8 rounded-full shrink-0 ${
-                      isMatched ? 'bg-[#D2ECD6] text-[#0C6B44]' : 'bg-[#FEF3C7] text-[#D97706]'
+                      isMatched 
+                        ? 'bg-[#D2ECD6] text-[#0C6B44]' 
+                        : isUrgentSearching
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-[#FEF3C7] text-[#D97706]'
                     }`}>
                       <span className={`animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75 ${
                         isMatched ? 'bg-emerald-500' : 'bg-amber-500'
                       }`} />
                       {isMatched ? (
                         <CheckCircle2 className="w-4 h-4 text-[#0C6B44] relative z-10" />
+                      ) : isUrgentSearching ? (
+                        <Zap className="w-4 h-4 text-amber-700 relative z-10 fill-amber-700" />
                       ) : (
                         <Clock className="w-4 h-4 text-[#D97706] relative z-10 animate-spin" />
                       )}
@@ -130,38 +163,72 @@ export const HomeActiveJobsFloating: React.FC = () => {
 
                     {/* Clean Direct Information with System Typography */}
                     <div className="min-w-0 flex-1">
-                      <div className="font-display text-xs sm:text-[13px] font-bold text-[#16261E] truncate leading-tight">
-                        {isMatched
-                          ? (acceptedReqs.length > 1
-                              ? `${acceptedReqs.length} Workers • ${job.category}`
-                              : worker
-                                ? `${worker.name} • ${job.category}`
-                                : `${job.category} Confirmed`)
-                          : `Finding ${job.category}...`}
+                      <div className="font-display text-xs sm:text-[13px] font-bold text-[#16261E] truncate leading-tight flex items-center gap-1.5">
+                        <span className="truncate">
+                          {isMatched
+                            ? (acceptedReqs.length > 1
+                                ? `${acceptedReqs.length} Workers • ${job.category}`
+                                : worker
+                                  ? `${worker.name} • ${job.category}`
+                                  : `${job.category} Confirmed`)
+                            : isUrgentSearching
+                              ? `Today's ${job.category}`
+                              : `Finding ${job.category}...`}
+                        </span>
+                        {isUrgentSearching && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-extrabold uppercase shrink-0 flex items-center gap-0.5">
+                            <Zap className="w-2.5 h-2.5 fill-white" />
+                            <span>Urgent</span>
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] font-medium truncate mt-0.5 leading-tight flex items-center gap-1.5">
                         {isMatched ? (
                           <span className="text-[#0C6B44] font-semibold">
                             Scheduled for {formatScheduleTime(job.date, job.time)}
                           </span>
+                        ) : isUrgentSearching && urgentInfo ? (
+                          urgentInfo.isExpired ? (
+                            <span className="text-amber-800 font-bold">
+                              No worker available right now
+                            </span>
+                          ) : (
+                            <span className="text-amber-700 font-bold">
+                              Finding worker nearby • {urgentInfo.formatted}
+                            </span>
+                          )
                         ) : (
                           <span className="text-[#B45309]">
-                            Sent to {job.requests.length} worker{job.requests.length > 1 ? 's' : ''} • Awaiting
+                            Sent to {job.requests.length} worker{job.requests.length > 1 ? 's' : ''} • Waiting for reply
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Right: Actions (Dark Green View / Track Button) */}
+                  {/* Right: Actions */}
                   <div className="flex items-center shrink-0">
-                    <span className="px-3 py-1 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-[11px] font-bold shadow-2xs transition-all active:scale-95">
-                      {isMatched ? 'View' : 'Track'}
-                    </span>
+                    {isUrgentSearching && urgentInfo?.isExpired ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          retryUrgentJob(job.id);
+                        }}
+                        className="px-2.5 py-1 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-[11px] font-bold shadow-2xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3 stroke-[2.2]" />
+                        <span>Retry</span>
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-[11px] font-bold shadow-2xs transition-all active:scale-95">
+                        {isMatched ? 'View' : 'Track'}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Bottom-right dots indicating multiple cards (like Zomato) */}
+                {/* Bottom-right dots indicating multiple cards */}
                 {activeJobs.length > 1 && (
                   <div className="flex items-center justify-end gap-1 pr-1 select-none">
                     {activeJobs.map((_, i) => (
