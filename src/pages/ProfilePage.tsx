@@ -209,6 +209,9 @@ export const ProfilePage: React.FC = () => {
               })}
             </div>
           </div>
+
+          {/* Generous empty space at the bottom so last item never touches the bottom window of phone */}
+          <div className="h-16 sm:h-20 w-full shrink-0" aria-hidden="true" />
         </div>
       </div>
     );
@@ -250,6 +253,9 @@ export const ProfilePage: React.FC = () => {
               </p>
             </div>
           ))}
+
+          {/* Generous empty space at the bottom so last item never touches the bottom window of phone */}
+          <div className="h-16 sm:h-20 w-full shrink-0" aria-hidden="true" />
         </div>
       </div>
     );

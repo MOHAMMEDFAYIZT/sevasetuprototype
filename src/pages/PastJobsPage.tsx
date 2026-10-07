@@ -64,7 +64,7 @@ export const PastJobsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-32 min-h-full relative">
+    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-36 sm:pb-40 min-h-full relative">
       {/* Back button at the top (exact match to WorkersListPage) */}
       <button
         type="button"
@@ -215,6 +215,9 @@ export const PastJobsPage: React.FC = () => {
               </div>
             );
           })}
+
+          {/* Generous empty space at the bottom so last card never touches the bottom window of phone */}
+          <div className="h-16 sm:h-20 w-full shrink-0" aria-hidden="true" />
         </div>
       )}
     </div>

@@ -411,6 +411,9 @@ export const CreateJobPage: React.FC = () => {
             <ArrowRight className="w-5 h-5 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
+
+        {/* Generous empty space at the bottom so submit button never touches the bottom window of phone */}
+        <div className="h-16 sm:h-20 w-full shrink-0" aria-hidden="true" />
       </div>
     </div>
   );

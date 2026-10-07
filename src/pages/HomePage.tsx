@@ -26,54 +26,54 @@ const OTHER_SERVICE_CONFIG: Record<
   string, 
   { 
     iconSrc: string; 
-    bg: string;          // Ultra-light pastel background
-    border: string;      // Matching subtle border
+    bg: string;          // Ultra-light pastel background matching reference
+    border: string;      // 1.5px solid border matching reference (0.3 opacity)
   }
 > = {
   'painter': { 
     iconSrc: '/images/service-icons/painter.png', 
-    bg: 'bg-[#FFF8F0]', 
-    border: 'border-[#FFE2C8]' 
+    bg: 'linear-gradient(rgba(247, 86, 68, 0.09), rgba(247, 86, 68, 0.09)), #ffffff', 
+    border: 'rgba(247, 86, 68, 0.3)' 
   },
   'gardening': { 
     iconSrc: '/images/service-icons/gardening.png', 
-    bg: 'bg-[#F0FDF4]', 
-    border: 'border-[#D1F7DB]' 
+    bg: 'linear-gradient(rgba(53, 162, 57, 0.09), rgba(53, 162, 57, 0.09)), #ffffff', 
+    border: 'rgba(53, 162, 57, 0.3)' 
   },
   'farm-work': { 
     iconSrc: '/images/service-icons/farm-work.png', 
-    bg: 'bg-[#FEFCE8]', 
-    border: 'border-[#FEF08A]/80' 
+    bg: 'linear-gradient(rgba(120, 170, 59, 0.09), rgba(120, 170, 59, 0.09)), #ffffff', 
+    border: 'rgba(120, 170, 59, 0.3)' 
   },
   'mechanic': { 
     iconSrc: '/images/service-icons/mechanic.png', 
-    bg: 'bg-[#F0F7FF]', 
-    border: 'border-[#D0E2FF]' 
+    bg: 'linear-gradient(rgba(39, 91, 134, 0.09), rgba(39, 91, 134, 0.09)), #ffffff', 
+    border: 'rgba(39, 91, 134, 0.3)' 
   },
   'cooking': { 
     iconSrc: '/images/service-icons/cooking.png', 
-    bg: 'bg-[#FFF5F5]', 
-    border: 'border-[#FED4D4]' 
+    bg: 'linear-gradient(rgba(249, 123, 28, 0.09), rgba(249, 123, 28, 0.09)), #ffffff', 
+    border: 'rgba(249, 123, 28, 0.3)' 
   },
   'transport': { 
     iconSrc: '/images/service-icons/transport.png', 
-    bg: 'bg-[#F0FDFA]', 
-    border: 'border-[#CCFBF1]' 
+    bg: 'linear-gradient(rgba(1, 159, 179, 0.09), rgba(1, 159, 179, 0.09)), #ffffff', 
+    border: 'rgba(1, 159, 179, 0.3)' 
   },
   'animal-care': { 
     iconSrc: '/images/service-icons/animal-care.png', 
-    bg: 'bg-[#FDF2F8]', 
-    border: 'border-[#FCE7F3]' 
+    bg: 'linear-gradient(rgba(243, 78, 145, 0.09), rgba(243, 78, 145, 0.09)), #ffffff', 
+    border: 'rgba(243, 78, 145, 0.3)' 
   },
   'general-labour': { 
     iconSrc: '/images/service-icons/general-labour.png', 
-    bg: 'bg-[#FAF5FF]', 
-    border: 'border-[#E9D5FF]' 
+    bg: 'linear-gradient(rgba(114, 65, 215, 0.09), rgba(114, 65, 215, 0.09)), #ffffff', 
+    border: 'rgba(114, 65, 215, 0.3)' 
   },
   'tailor': { 
     iconSrc: '/images/service-icons/tailor.png', 
-    bg: 'bg-[#F5F3FF]', 
-    border: 'border-[#DDD6FE]' 
+    bg: 'linear-gradient(rgba(218, 74, 77, 0.09), rgba(218, 74, 77, 0.09)), #ffffff', 
+    border: 'rgba(218, 74, 77, 0.3)' 
   },
 };
 
@@ -170,38 +170,7 @@ export const HomePage: React.FC = () => {
     'carpenter': '/images/services/most-searched/carpenter.png',
   };
 
-  // Distinct matching border shades and tints for each Most Searched card
-  const MOST_SEARCHED_CONFIG: Record<string, {
-    bg: string;
-    border: string;
-    hoverBorder: string;
-    shadow: string;
-  }> = {
-    electrician: {
-      bg: 'bg-[#FEFCE8]',
-      border: 'border-[#FCD34D]',
-      hoverBorder: 'group-hover:border-[#EAB308]',
-      shadow: 'shadow-[0_4px_16px_rgba(202,138,4,0.15)]',
-    },
-    plumber: {
-      bg: 'bg-[#F0F9FF]',
-      border: 'border-[#BAE6FD]',
-      hoverBorder: 'group-hover:border-[#38BDF8]',
-      shadow: 'shadow-[0_4px_16px_rgba(2,132,199,0.15)]',
-    },
-    cleaning: {
-      bg: 'bg-[#F0FDF4]',
-      border: 'border-[#BBF7D0]',
-      hoverBorder: 'group-hover:border-[#4ADE80]',
-      shadow: 'shadow-[0_4px_16px_rgba(22,163,74,0.15)]',
-    },
-    carpenter: {
-      bg: 'bg-[#FFF7ED]',
-      border: 'border-[#FED7AA]',
-      hoverBorder: 'group-hover:border-[#FB923C]',
-      shadow: 'shadow-[0_4px_16px_rgba(234,88,12,0.15)]',
-    },
-  };
+
 
   // When user taps a service, open the Job Details Bottom Sheet Modal directly
   const handleSelectService = (categoryName: string) => {
@@ -224,7 +193,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="w-full flex flex-col px-0 pt-2 pb-8">
       {/* Swiggy-Style Top Navigation Header */}
-      <div className="px-5 pt-3 pb-2 flex items-center justify-between select-none">
+      <div className="px-5 pt-[max(12px,calc(env(safe-area-inset-top,0px)+8px))] pb-2 flex items-center justify-between select-none">
         {/* Left: Swiggy-Style Address Block */}
         <button
           type="button"
@@ -355,12 +324,6 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
             {filteredMostSearched.slice(0, 4).map(service => {
               const imgPath = serviceImageMap[service.id];
-              const config = MOST_SEARCHED_CONFIG[service.id] || {
-                bg: 'bg-[#F6FAF4]',
-                border: 'border-[#CBD8CA]',
-                hoverBorder: 'group-hover:border-[#0C6B44]/60',
-                shadow: 'shadow-[0_4px_16px_rgba(12,60,35,0.08)]',
-              };
               return (
                 <div
                   key={service.id}
@@ -368,16 +331,14 @@ export const HomePage: React.FC = () => {
                   className="group flex flex-col cursor-pointer active:scale-[0.98] transition-transform select-none"
                   title={`Request ${service.name}`}
                 >
-                  {/* Journey Planner Illustration Card Tile with card-tinted distinct border & soft shadow */}
-                  <div className={`w-full aspect-[16/11] rounded-[22px] overflow-hidden ${config.bg} border-2 ${config.border} ${config.hoverBorder} ${config.shadow} group-hover:-translate-y-0.5 transition-all p-1`}>
-                    <div className="w-full h-full rounded-[18px] overflow-hidden bg-white">
-                      <img 
-                        src={imgPath} 
-                        alt={service.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    </div>
+                  {/* Journey Planner Illustration Card Tile (Clean subtle border for background separation, static on hover) */}
+                  <div className="w-full aspect-[16/11] rounded-[20px] sm:rounded-[22px] overflow-hidden bg-white border-[1.5px] border-[#E3ECE0] shadow-[0_3px_12px_rgba(16,60,38,0.06)] transition-all">
+                    <img 
+                      src={imgPath} 
+                      alt={service.name} 
+                      className="w-full h-full object-cover" 
+                      loading="lazy"
+                    />
                   </div>
 
                   {/* Separated Label Below Card (RailOne Style) */}
@@ -406,8 +367,8 @@ export const HomePage: React.FC = () => {
             {filteredOtherServices.map(service => {
               const config = OTHER_SERVICE_CONFIG[service.id] || {
                 iconSrc: `/images/service-icons/${service.id}.png`,
-                bg: 'bg-[#DCFCE7]',
-                border: 'border-[#BBF7D0]'
+                bg: 'linear-gradient(rgba(58,170,72,0.09), rgba(58,170,72,0.09)), #ffffff',
+                border: 'rgba(58,170,72,0.3)'
               };
               return (
                 <div
@@ -416,12 +377,15 @@ export const HomePage: React.FC = () => {
                   className="group flex flex-col items-center cursor-pointer active:scale-[0.96] transition-transform select-none"
                   title={`Request ${service.name}`}
                 >
-                  {/* RailOne Style Pastel Rounded Rectangle Card Tile with User's Extracted Icons */}
-                  <div className={`w-full aspect-[4/3] rounded-[20px] sm:rounded-[22px] flex items-center justify-center p-2.5 sm:p-3.5 ${config.bg} border ${config.border} shadow-[0_3px_12px_rgba(16,60,38,0.04)] group-hover:shadow-[0_8px_20px_rgba(16,60,38,0.09)] group-hover:-translate-y-0.5 transition-all`}>
+                  {/* Reference Style Pastel Tile with 1.5px border and tinted background from reference HTML */}
+                  <div 
+                    style={{ background: config.bg, borderColor: config.border }}
+                    className="w-full aspect-[4/3] rounded-[20px] sm:rounded-[22px] flex items-center justify-center p-2.5 sm:p-3.5 border-[1.5px] shadow-[0_3px_12px_rgba(16,60,38,0.04)] transition-all"
+                  >
                     <img 
                       src={config.iconSrc} 
                       alt={service.name} 
-                      className="w-13 h-13 sm:w-16 sm:h-16 object-contain transition-transform group-hover:scale-110 duration-200" 
+                      className="w-13 h-13 sm:w-16 sm:h-16 object-contain" 
                       loading="lazy"
                     />
                   </div>

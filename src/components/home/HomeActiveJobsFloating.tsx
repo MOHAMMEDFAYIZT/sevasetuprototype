@@ -110,7 +110,7 @@ export const HomeActiveJobsFloating: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-[72px] sm:bottom-[76px] left-0 right-0 z-30 pointer-events-none px-3.5 animate-slide-up">
+    <div className="absolute bottom-[calc(70px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 pointer-events-none px-3.5 animate-slide-up">
       <div className="w-full max-w-[390px] mx-auto pointer-events-auto">
         <div
           ref={scrollRef}
@@ -134,8 +134,8 @@ export const HomeActiveJobsFloating: React.FC = () => {
                 onClick={() => navigate(`/jobs/${job.id}`)}
                 className={`relative w-full shrink-0 ${activeJobs.length > 1 ? 'min-w-[92%] snap-center' : ''} rounded-[20px] backdrop-blur-md p-2.5 sm:p-3 border shadow-[0_8px_24px_rgba(12,65,40,0.12)] cursor-pointer transition-all active:scale-[0.99] select-none flex flex-col gap-1 ${
                   isUrgentSearching
-                    ? 'bg-[#FFFBEB]/95 border-amber-300 ring-1 ring-amber-400/30 hover:bg-[#FEF3C7]'
-                    : 'bg-[#EAF6ED]/95 border-[#BDDEC4] hover:bg-[#e2f2e6]'
+                    ? 'bg-[#FFFBEB]/95 border-amber-300 ring-1 ring-amber-400/30'
+                    : 'bg-[#EAF6ED]/95 border-[#BDDEC4]'
                 }`}
               >
                 {/* Main Content Row */}

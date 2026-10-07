@@ -18,7 +18,7 @@ export const BottomNav: React.FC = () => {
   return (
     <nav 
       aria-label="Main menu"
-      className="absolute bottom-0 left-0 right-0 z-40 w-full h-[64px] sm:h-[68px] bg-[#0C6B44] border-t border-[#3AAA48]/40 shadow-[0_-4px_24px_rgba(12,107,68,0.2)] px-2.5 flex items-center justify-around select-none"
+      className="absolute bottom-0 left-0 right-0 z-40 w-full min-h-[64px] pb-[max(6px,env(safe-area-inset-bottom,0px))] bg-[#0C6B44] border-t border-[#3AAA48]/40 shadow-[0_-4px_24px_rgba(12,107,68,0.2)] px-2.5 flex items-center justify-around select-none"
     >
       {navItems.map(item => {
         const Icon = item.icon;

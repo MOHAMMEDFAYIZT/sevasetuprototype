@@ -514,6 +514,9 @@ export const JobDetailsPage: React.FC = () => {
         {isActive && (
           <SlideToCancel onCancel={handleCancelJob} />
         )}
+
+        {/* Generous empty space at the bottom so last element never touches the bottom window of phone */}
+        <div className="h-16 sm:h-20 w-full shrink-0" aria-hidden="true" />
       </div>
 
     </div>

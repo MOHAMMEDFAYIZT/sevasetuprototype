@@ -61,24 +61,28 @@
 }
 
 html, body {
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
-  min-height: 100vh;
   width: 100%;
+  height: 100%;
+  height: 100dvh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 body {
   font-family: var(--fb);
   color: var(--ink);
-  background: linear-gradient(135deg, #dfeee5, #c9dfd1);
+  background: #F8FCF9;
   -webkit-font-smoothing: antialiased;
   font-size: 15px;
 }
@@ -97,31 +101,18 @@ h1, h2, h3, h4, .fd {
   font-family: var(--fb);
 }
 
-/* Phone container matching uploaded reference */
+/* Mobile-first: 100% full screen native phone UI */
 .phone-frame {
   position: relative;
   width: 100%;
-  max-width: 420px;
-  height: 100vh;
+  max-width: 100%;
+  height: 100%;
   height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-@media (min-width: 640px) {
-  .phone-frame {
-    height: min(880px, calc(100vh - 36px));
-    min-height: 800px;
-    border-radius: 56px;
-    background: #F2F5F2;
-    padding: 8px;
-    box-shadow: 0 40px 80px rgba(20, 50, 35, 0.25);
-    margin: 18px auto;
-    flex-shrink: 0;
-  }
-}
-
-/* Exact device container with organic background from reference HTML */
 .device-container {
   position: relative;
   width: 100%;
@@ -131,12 +122,6 @@ h1, h2, h3, h4, .fd {
   isolation: isolate;
   display: flex;
   flex-direction: column;
-}
-
-@media (min-width: 640px) {
-  .device-container {
-    border-radius: 48px;
-  }
 }
 
 .device-container::before {
@@ -154,7 +139,37 @@ h1, h2, h3, h4, .fd {
   background-attachment: local;
 }
 
-/* Inner scroll viewport so background stays permanently fixed and continuous */
+/* On desktop / tablet (min 600px width): render inside realistic phone shell with desktop backdrop */
+@media (min-width: 600px) and (min-height: 640px) {
+  body {
+    background: linear-gradient(135deg, #dfeee5, #c9dfd1);
+  }
+
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .phone-frame {
+    max-width: 420px;
+    height: min(880px, calc(100vh - 36px));
+    min-height: 780px;
+    border-radius: 56px;
+    background: #F2F5F2;
+    padding: 8px;
+    box-shadow: 0 40px 80px rgba(20, 50, 35, 0.25);
+    margin: auto;
+    flex-shrink: 0;
+  }
+
+  .device-container {
+    border-radius: 48px;
+  }
+}
+
+/* Inner scroll viewport with native touch scrolling & overscroll containment */
 .screen-content {
   position: relative;
   width: 100%;
@@ -164,6 +179,7 @@ h1, h2, h3, h4, .fd {
   overflow-x: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 .screen-content::-webkit-scrollbar {
   display: none;

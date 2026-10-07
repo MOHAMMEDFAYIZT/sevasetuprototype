@@ -35,7 +35,7 @@ export const AppLayout: React.FC = () => {
     <div className="phone-frame">
       <div className="device-container">
         {/* Scrollable Viewport with permanently fixed background behind */}
-        <main className={`screen-content flex flex-col w-full ${isMainTab ? 'pb-28' : 'pb-0'}`}>
+        <main className={`screen-content flex flex-col w-full ${isMainTab ? 'pb-[calc(76px+env(safe-area-inset-bottom,0px))]' : 'pb-0'}`}>
           <Outlet />
         </main>
 
