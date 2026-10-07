@@ -191,7 +191,7 @@ export const CreateJobPage: React.FC = () => {
         {/* Date Selection: Defaults to Today */}
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-[#185E3B]" />
+            <Calendar className="w-3.5 h-3.5 text-[#0C6B44]" />
             <span>When do you need the service?</span>
           </label>
 
@@ -201,7 +201,7 @@ export const CreateJobPage: React.FC = () => {
               onClick={() => updateDraftJob({ date: todayStr })}
               className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 (draftJob.date === todayStr || !draftJob.date)
-                  ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-2xs'
+                  ? 'bg-[#0C6B44] text-white border-[#0C6B44] shadow-2xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
               }`}
             >
@@ -214,7 +214,7 @@ export const CreateJobPage: React.FC = () => {
               onClick={() => updateDraftJob({ date: tomorrowStr })}
               className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 draftJob.date === tomorrowStr
-                  ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-2xs'
+                  ? 'bg-[#0C6B44] text-white border-[#0C6B44] shadow-2xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
               }`}
             >
@@ -229,7 +229,7 @@ export const CreateJobPage: React.FC = () => {
               value={draftJob.date || todayStr}
               min={todayStr}
               onChange={(e) => updateDraftJob({ date: e.target.value })}
-              className="w-full p-2.5 px-3 text-xs font-semibold text-slate-800 bg-[#FAFCFB] border border-slate-200 hover:border-slate-300 focus:border-[#185E3B] focus:bg-white rounded-xl outline-none transition-colors"
+              className="w-full p-2.5 px-3 text-xs font-semibold text-slate-800 bg-[#FAFCFB] border border-slate-200 hover:border-slate-300 focus:border-[#0C6B44] focus:bg-white rounded-xl outline-none transition-colors"
             />
           </div>
         </div>
@@ -237,7 +237,7 @@ export const CreateJobPage: React.FC = () => {
         {/* Location Selector: Clean 2-Way Choice (Saved Address vs Current Location) */}
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-[#185E3B]" />
+            <MapPin className="w-3.5 h-3.5 text-[#0C6B44]" />
             <span>Location</span>
           </label>
 
@@ -247,7 +247,7 @@ export const CreateJobPage: React.FC = () => {
               onClick={handleUseSavedLocation}
               className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 !isCurrentGps
-                  ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-2xs'
+                  ? 'bg-[#0C6B44] text-white border-[#0C6B44] shadow-2xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
               }`}
             >
@@ -261,7 +261,7 @@ export const CreateJobPage: React.FC = () => {
               onClick={handleUseCurrentLocation}
               className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 isCurrentGps
-                  ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-2xs'
+                  ? 'bg-[#0C6B44] text-white border-[#0C6B44] shadow-2xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
               }`}
             >

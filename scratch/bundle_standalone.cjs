@@ -88,7 +88,8 @@ ${jsContent}
 `;
 
 fs.writeFileSync(path.join(outputDir, 'index.html'), htmlContent, 'utf8');
-console.log(`Successfully generated standalone HTML at: ${path.join(outputDir, 'index.html')}`);
+fs.writeFileSync(path.join(rootDir, 'SevaSetu.html'), htmlContent, 'utf8');
+console.log(`Successfully generated standalone HTML at: ${path.join(outputDir, 'index.html')} and ${path.join(rootDir, 'SevaSetu.html')}`);
 
 // Create README.md in standalone folder
 const readmeContent = `# Seva Setu — Standalone Prototype

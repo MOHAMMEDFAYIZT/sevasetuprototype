@@ -5,37 +5,40 @@ import { WORKERS_DATABASE } from '../../data/mockData';
 import { 
   X, 
   Calendar, 
-  MapPin, 
-  Navigation, 
-  ArrowRight, 
-  Check, 
+  Clock,
   Mic, 
   Square, 
   Play, 
   Pause, 
   Trash2, 
   Edit3,
-  Sparkles,
-  UserCheck
+  UserCheck,
+  MapPin,
+  Users,
+  Minus,
+  Plus,
+  Check,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
-const SERVICE_IMAGES: Record<string, string> = {
-  'electrician': 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=500&q=80',
-  'plumber': 'https://images.unsplash.com/photo-1581244277943-fe4a9c77d32e?auto=format&fit=crop&w=500&q=80',
-  'cleaning': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80',
-  'carpenter': 'https://images.unsplash.com/photo-1502005229762-ee1b2da97ba4?auto=format&fit=crop&w=500&q=80',
-  'painter': 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=500&q=80',
-  'gardening': 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=500&q=80',
-  'farm-work': 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=500&q=80',
-  'farm work': 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=500&q=80',
-  'mechanic': 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=500&q=80',
-  'cooking': 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=500&q=80',
-  'transport': 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=500&q=80',
-  'animal-care': 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=500&q=80',
-  'animal care': 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=500&q=80',
-  'general-labour': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=500&q=80',
-  'general labour': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=500&q=80',
-  'tailor': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=500&q=80',
+const SERVICE_ILLUSTRATIONS: Record<string, string> = {
+  'electrician': '/images/services/most-searched/electrician.png',
+  'plumber': '/images/services/most-searched/plumber.png',
+  'cleaning': '/images/services/most-searched/cleaning.png',
+  'carpenter': '/images/services/most-searched/carpenter.png',
+  'painter': '/images/service-icons/painter.png',
+  'gardening': '/images/service-icons/gardening.png',
+  'farm-work': '/images/service-icons/farm-work.png',
+  'farm work': '/images/service-icons/farm-work.png',
+  'mechanic': '/images/service-icons/mechanic.png',
+  'cooking': '/images/service-icons/cooking.png',
+  'transport': '/images/service-icons/transport.png',
+  'animal-care': '/images/service-icons/animal-care.png',
+  'animal care': '/images/service-icons/animal-care.png',
+  'general-labour': '/images/service-icons/general-labour.png',
+  'general labour': '/images/service-icons/general-labour.png',
+  'tailor': '/images/service-icons/tailor.png',
 };
 
 export const JobDetailsModal: React.FC = () => {
@@ -49,10 +52,26 @@ export const JobDetailsModal: React.FC = () => {
     setSelectedWorkerIds,
     createJobForWorker,
     user,
+    openLocationModal,
+    isKeyboardOpen,
+    openKeyboard,
     showToast
   } = useApp();
 
   const navigate = useNavigate();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sheetContentRef = useRef<HTMLDivElement>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+
+  // Auto scroll textarea into visible center when keyboard activates
+  useEffect(() => {
+    if (isKeyboardOpen) {
+      setTimeout(() => {
+        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+  }, [isKeyboardOpen]);
 
   const targetWorker = selectedWorkerIds.length === 1
     ? WORKERS_DATABASE.find(w => w.id === selectedWorkerIds[0])
@@ -63,12 +82,83 @@ export const JobDetailsModal: React.FC = () => {
     closeCreateJobModal();
   };
 
-  // Location mode: 'saved' (Saved Address) or 'current' (Current Location)
-  const locationMode = draftJob.locationMode || 'saved';
+  // 30-minute interval slots from 08:00 AM to 07:30 PM
+  const TIME_SLOTS = [
+    '08:00 AM', '08:30 AM',
+    '09:00 AM', '09:30 AM',
+    '10:00 AM', '10:30 AM',
+    '11:00 AM', '11:30 AM',
+    '12:00 PM', '12:30 PM',
+    '01:00 PM', '01:30 PM',
+    '02:00 PM', '02:30 PM',
+    '03:00 PM', '03:30 PM',
+    '04:00 PM', '04:30 PM',
+    '05:00 PM', '05:30 PM',
+    '06:00 PM', '06:30 PM',
+    '07:00 PM', '07:30 PM'
+  ];
 
-  // Mode for optional explanation: 'text' or 'voice'
-  const [detailMode, setDetailMode] = useState<'text' | 'voice'>('text');
-  
+  // Calendar month state for standard month calendar view
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const initialDate = draftJob.date ? new Date(draftJob.date) : new Date();
+    return new Date(initialDate.getFullYear(), initialDate.getMonth(), 1);
+  });
+
+  const nextMonth = () => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const prevMonth = () => {
+    setCalendarMonth(prev => {
+      const today = new Date();
+      const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+      if (newMonth < currentMonthStart) return prev;
+      return newMonth;
+    });
+  };
+
+  const getCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const days = [];
+
+    // Empty blank slots before 1st of the month
+    for (let i = 0; i < firstDayIndex; i++) {
+      days.push({ day: null, dateStr: '', isPast: true, isToday: false });
+    }
+
+    // Days of the month
+    for (let d = 1; d <= totalDays; d++) {
+      const dateObj = new Date(year, month, d);
+      dateObj.setHours(0, 0, 0, 0);
+      const dateStr = dateObj.toISOString().split('T')[0];
+      const isPast = dateObj < today;
+      const isToday = dateObj.getTime() === today.getTime();
+
+      days.push({
+        day: d,
+        dateStr,
+        isPast,
+        isToday
+      });
+    }
+
+    return days;
+  };
+
+  const workersNeeded = draftJob.workersNeeded || 1;
+  const handleUpdateWorkers = (count: number) => {
+    updateDraftJob({ workersNeeded: Math.max(1, Math.min(10, count)) });
+  };
+
   // Voice recording simulation states
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -86,25 +176,6 @@ export const JobDetailsModal: React.FC = () => {
   if (!isCreateJobModalOpen) return null;
 
   const todayStr = new Date().toISOString().split('T')[0];
-
-  const categoryKey = (selectedCategory || 'Electrician').toLowerCase().replace(/\s+/g, '-');
-  const serviceImg = SERVICE_IMAGES[categoryKey] || SERVICE_IMAGES['electrician'];
-
-  const handleSelectLocationMode = (mode: 'saved' | 'current') => {
-    if (mode === 'saved') {
-      updateDraftJob({
-        locationMode: 'saved',
-        location: user.location || 'Saved Address'
-      });
-      showToast('Set to Saved Address');
-    } else {
-      updateDraftJob({
-        locationMode: 'current',
-        location: 'Current Location'
-      });
-      showToast('Set to Current Location (GPS)');
-    }
-  };
 
   // Voice recording handlers
   const startRecording = () => {
@@ -124,7 +195,7 @@ export const JobDetailsModal: React.FC = () => {
   const stopRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsRecording(false);
-    const secs = recordSeconds || 5;
+    const secs = recordSeconds || 6;
     const durStr = `0:${secs < 10 ? '0' : ''}${secs}`;
     setVoiceDuration(durStr);
     setHasRecordedVoice(true);
@@ -132,7 +203,7 @@ export const JobDetailsModal: React.FC = () => {
       hasVoiceNote: true,
       voiceNoteDuration: durStr
     });
-    showToast('Voice note attached! (Optional)');
+    showToast('Voice note attached!');
   };
 
   const deleteVoiceNote = () => {
@@ -153,15 +224,17 @@ export const JobDetailsModal: React.FC = () => {
       setIsPlayingVoice(true);
       setTimeout(() => {
         setIsPlayingVoice(false);
-      }, (recordSeconds || 5) * 1000);
+      }, (recordSeconds || 6) * 1000);
     } else {
       setIsPlayingVoice(false);
     }
   };
 
+  const currentAddress = draftJob.location || user.location || 'Palakkad Town';
+
   const handleFindWorkers = () => {
     const finalDate = draftJob.date || todayStr;
-    const finalLocation = draftJob.location || (locationMode === 'current' ? 'Current Location' : (user.location || 'Saved Address'));
+    const finalLocation = currentAddress;
 
     if (targetWorker) {
       const newJobId = createJobForWorker(targetWorker.id, {
@@ -190,261 +263,273 @@ export const JobDetailsModal: React.FC = () => {
     navigate('/workers');
   };
 
+  const categoryKey = (selectedCategory || 'Electrician').toLowerCase().replace(/\s+/g, '-');
+  const serviceImg = SERVICE_ILLUSTRATIONS[categoryKey] || SERVICE_ILLUSTRATIONS['electrician'];
+
+  // Format today as '05 Oct 2026' or formatted date
+  const formatDateDisplay = (dateString?: string) => {
+    try {
+      const d = dateString ? new Date(dateString) : new Date();
+      if (isNaN(d.getTime())) return dateString || 'Today';
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    } catch {
+      return dateString || 'Today';
+    }
+  };
+
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4 sm:p-6 animate-fade-in"
+      className={`absolute inset-0 z-50 flex items-end justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[5px] animate-fade-in transition-all duration-200 ${
+        isKeyboardOpen ? 'pb-[215px]' : 'pb-0'
+      }`}
       onClick={handleClose}
     >
-      {/* Centered Floating Card with soft ambient sage glow in harmony with Home Page */}
-      <div
-        className="w-full max-w-[420px] bg-gradient-to-b from-[#F1F7F3] via-white to-white rounded-[32px] p-5 sm:p-6 shadow-[0_24px_60px_rgba(20,80,50,0.22)] border border-[#b4ddc5]/60 animate-scale-in flex flex-col max-h-[92vh] overflow-y-auto"
+      {/* Native Bottom Sheet touching phone sides */}
+      <div 
+        ref={sheetContentRef}
+        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-4 sm:p-5 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col max-h-full overflow-y-auto transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header: Title + Close [✕] Button */}
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-emerald-900/10 shrink-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[19px] font-black text-slate-900 tracking-tight leading-none">
-              Job Details
-            </h2>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/80 text-[#144c31] border border-emerald-300/60">
-              {targetWorker ? (
-                <>
-                  <UserCheck className="w-2.5 h-2.5 text-[#185E3B]" />
-                  <span>Requesting {targetWorker.name}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-2.5 h-2.5 text-[#185E3B]" />
-                  <span>Instant Request</span>
-                </>
+        {/* Drag handle pill */}
+        <div className="w-11 h-1 bg-[#CBD8CA] rounded-full mx-auto mb-3" />
+
+        {/* Compact Top Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Service Illustration Card */}
+            <div className="w-[68px] h-[68px] rounded-[18px] overflow-hidden bg-[#FEF6EE] border border-[#F3E5D8] shrink-0 shadow-2xs">
+              <img 
+                src={serviceImg} 
+                alt={selectedCategory} 
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Name + Subtitle */}
+            <div className="min-w-0">
+              <h2 className="font-display text-xl sm:text-[21px] font-bold text-[#16261E] tracking-tight leading-tight truncate">
+                {selectedCategory || 'Electrician'}
+              </h2>
+              <p className="text-xs text-[#76857D] font-normal leading-snug mt-0.5">
+                Job details
+              </p>
+              {targetWorker && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0C6B44] bg-[#E2F3DD] px-2 py-0.5 rounded-full mt-1">
+                  <UserCheck className="w-2.5 h-2.5 text-[#0C6B44]" />
+                  <span>{targetWorker.name}</span>
+                </span>
               )}
-            </span>
+            </div>
           </div>
+
+          {/* Clean Circular Close Button */}
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors shadow-2xs border border-slate-200/80 cursor-pointer"
+            className="w-7 h-7 rounded-full bg-white hover:bg-[#F6FAF4] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors border border-[#E3ECE0] cursor-pointer shrink-0"
             title="Close"
           >
-            <X className="w-4 h-4 stroke-[2.2]" />
+            <X className="w-3.5 h-3.5 stroke-[2]" />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="space-y-3.5">
-          {/* Hero Craft Spotlight (Taller breathing room, natural framing & Home card synergy) */}
-          <div className="relative rounded-2xl overflow-hidden aspect-[2.1/1] sm:h-[145px] border border-slate-200/90 shadow-2xs group bg-slate-100">
-            <img
-              src={serviceImg}
-              alt={selectedCategory}
-              className="w-full h-full object-cover object-[center_22%]"
-              loading="lazy"
-            />
-            {/* Gradient Scrim & Typography at bottom matching Home cards */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent flex flex-col justify-end p-3.5 pointer-events-none">
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/35 text-emerald-200 uppercase tracking-wider w-fit mb-1 border border-emerald-400/30 backdrop-blur-xs">
-                Verified Craft
-              </span>
-              <h3 className="text-white font-black text-[18px] leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                {selectedCategory || 'Electrician'}
-              </h3>
-              <p className="text-white/85 text-[11px] font-medium drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]">
-                Independent local workers available now
-              </p>
-            </div>
-          </div>
-
-          {/* Service Date: Pre-filled Current Day + Calendar Selector */}
+        {/* Content Fields with compact spacing */}
+        <div className="space-y-2.5">
+          {/* 1. Service Location - Slim Card */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#185E3B]" />
-              <span>When do you need the service?</span>
+            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+              <MapPin className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+              <span>Service Location</span>
             </label>
-
-            <div className="relative flex items-center">
-              <input
-                type="date"
-                min={todayStr}
-                value={draftJob.date || todayStr}
-                onChange={(e) => updateDraftJob({ date: e.target.value })}
-                className="w-full py-2.5 pl-3.5 pr-24 rounded-xl border border-slate-200 bg-[#F8FAF9] hover:bg-white focus:bg-white focus:border-[#185E3B] focus:ring-2 focus:ring-[#185E3B]/20 text-xs sm:text-sm font-bold text-slate-900 transition-all cursor-pointer outline-none shadow-2xs"
-              />
-              <span className="absolute right-3 pointer-events-none text-[10px] font-bold text-[#185E3B] bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200/90 shadow-2xs">
-                {(draftJob.date === todayStr || !draftJob.date) ? 'Today' : 'Scheduled'}
-              </span>
-            </div>
-          </div>
-
-          {/* Location Selector: Clean 2-Way Choice (Saved Address vs Current Location) */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#185E3B]" />
-              <span>Location</span>
-            </label>
-
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between gap-2 bg-[#F6FAF4] border border-[#E3ECE0] rounded-xl py-1.5 px-3 shadow-2xs">
+              <div className="min-w-0 flex-1">
+                <span className="font-semibold text-xs text-[#16261E] truncate block">
+                  {currentAddress}
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={() => handleSelectLocationMode('saved')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  locationMode === 'saved'
-                    ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-[0_2px_8px_rgba(24,94,59,0.25)]'
-                    : 'bg-[#F8FAF9] hover:bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-                }`}
+                onClick={openLocationModal}
+                className="text-[10px] font-bold text-[#0C6B44] bg-white hover:bg-[#E2F3DD] px-2.5 py-0.5 rounded-full border border-[#CBD8CA] cursor-pointer shrink-0 transition-colors shadow-2xs"
               >
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span>Saved Address</span>
-                {locationMode === 'saved' && <Check className="w-3.5 h-3.5 stroke-[2.5] ml-0.5" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectLocationMode('current')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  locationMode === 'current'
-                    ? 'bg-[#185E3B] text-white border-[#185E3B] shadow-[0_2px_8px_rgba(24,94,59,0.25)]'
-                    : 'bg-[#F8FAF9] hover:bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <Navigation className="w-3.5 h-3.5 shrink-0" />
-                <span>Current Location</span>
-                {locationMode === 'current' && <Check className="w-3.5 h-3.5 stroke-[2.5] ml-0.5" />}
+                Change
               </button>
             </div>
           </div>
 
-          {/* Optional Explanation with Lively Voice / Text Switch */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                  Explain Need
+          {/* 2. Service Date - Slim Card with In-App Selector */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+              <Calendar className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+              <span>Service Date</span>
+            </label>
+
+            <div 
+              onClick={() => setIsDatePickerOpen(true)}
+              className="relative flex items-center justify-between bg-white border border-[#E3ECE0] hover:border-[#3AAA48] rounded-xl py-1.5 px-3 transition-all shadow-2xs cursor-pointer select-none"
+            >
+              <span className="font-display text-xs font-bold text-[#16261E] flex-1">
+                {formatDateDisplay(draftJob.date || todayStr)}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold py-0.5 px-2 rounded-full bg-[#E2F3DD] text-[#0C6B44]">
+                  {(draftJob.date === todayStr || !draftJob.date) ? 'Today' : 'Scheduled'}
                 </span>
-                <span className="text-[10px] font-medium text-slate-400">
-                  (Optional)
+                <div className="w-6 h-6 rounded-full bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-center text-[#0C6B44]">
+                  <Calendar className="w-3 h-3 stroke-[2.2]" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Preferred Start Time - Slim Card */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+              <Clock className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+              <span>Preferred Start Time</span>
+            </label>
+
+            <div 
+              onClick={() => setIsTimePickerOpen(true)}
+              className="relative flex items-center justify-between bg-white border border-[#E3ECE0] hover:border-[#3AAA48] rounded-xl py-1.5 px-3 transition-all shadow-2xs cursor-pointer select-none"
+            >
+              <span className="font-display text-xs font-bold text-[#16261E]">
+                {draftJob.time || '10:00 AM'}
+              </span>
+
+              <div className="w-6 h-6 rounded-full bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-center text-[#0C6B44]">
+                <Clock className="w-3 h-3 stroke-[2.2]" />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Workers Needed - 1 Single Compact Line */}
+          {!targetWorker && (
+            <div className="flex items-center justify-between gap-2.5 bg-[#F6FAF4] border border-[#E3ECE0] rounded-xl py-1.5 px-3 shadow-2xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 rounded-full bg-white border border-[#CBD8CA] flex items-center justify-center text-[#0C6B44] shrink-0">
+                  <Users className="w-3.5 h-3.5 stroke-[2]" />
+                </div>
+                <span className="text-xs font-bold text-[#16261E] truncate">
+                  Workers needed
                 </span>
               </div>
 
-              {/* Lively Mode Switch */}
-              <div className="flex items-center bg-[#F1F7F3] border border-[#b4ddc5]/60 p-0.5 rounded-lg">
+              {/* Connected Stepper Pill */}
+              <div className="flex items-center bg-white border border-[#CBD8CA] rounded-full p-0.5 shadow-2xs shrink-0">
                 <button
                   type="button"
-                  onClick={() => setDetailMode('text')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                    detailMode === 'text'
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  disabled={workersNeeded <= 1}
+                  onClick={() => handleUpdateWorkers(workersNeeded - 1)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                  aria-label="Decrease workers"
                 >
-                  <Edit3 className="w-2.5 h-2.5" />
-                  <span>Type</span>
+                  <Minus className="w-3 h-3" />
                 </button>
+                <span className="w-6 text-center font-display text-xs font-bold text-[#16261E]">
+                  {workersNeeded}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setDetailMode('voice')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                    detailMode === 'voice'
-                      ? 'bg-[#185E3B] text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  disabled={workersNeeded >= 10}
+                  onClick={() => handleUpdateWorkers(workersNeeded + 1)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                  aria-label="Increase workers"
                 >
-                  <Mic className="w-2.5 h-2.5" />
-                  <span>Voice Note</span>
+                  <Plus className="w-3 h-3" />
                 </button>
               </div>
             </div>
+          )}
 
-            {/* Type Mode */}
-            {detailMode === 'text' && (
+          {/* 5. Job details (optional) */}
+          <div>
+            <label className="block text-xs font-semibold text-[#16261E] mb-1.5 flex items-center gap-1.5">
+              <Edit3 className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2]" />
+              <span>Job details</span>
+              <span className="text-[11px] font-normal text-[#76857D]">
+                (optional)
+              </span>
+            </label>
+
+            {/* Textarea Container with inside Mic button */}
+            <div className="relative rounded-2xl border border-[#E3ECE0] bg-white focus-within:border-[#3AAA48] focus-within:ring-2 focus-within:ring-[#3AAA48]/20 transition-all shadow-2xs p-2.5">
               <textarea
+                ref={textareaRef}
                 rows={2}
                 value={draftJob.description}
                 onChange={(e) => updateDraftJob({ description: e.target.value })}
-                placeholder="Optional: e.g. switchboard sparking, fan inspection..."
-                className="w-full p-2.5 text-xs text-slate-900 bg-[#FAFCFB] border border-[#CBD5E1] focus:border-[#185E3B] focus:bg-white focus:ring-2 focus:ring-[#185E3B]/10 rounded-xl outline-none placeholder:text-slate-400 resize-none transition-all"
+                onFocus={() => {
+                  openKeyboard();
+                  setTimeout(() => {
+                    textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 120);
+                }}
+                placeholder="Tell us what needs to be done..."
+                className="w-full pr-8 text-xs text-[#16261E] bg-transparent outline-none placeholder:text-[#94A3B8] resize-none leading-relaxed"
               />
-            )}
 
-            {/* Voice Mode */}
-            {detailMode === 'voice' && (
-              <div className="rounded-xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50/70 via-[#F1F7F3] to-emerald-50/70 p-2.5 transition-all">
-                {!hasRecordedVoice && !isRecording && (
+              {/* Inside Mic Button on the right */}
+              <div className="absolute right-2.5 bottom-2.5">
+                {isRecording ? (
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    className="h-7 px-2 rounded-full bg-[#D3362B] text-white text-[10px] font-semibold flex items-center gap-1 cursor-pointer animate-pulse"
+                    title="Stop recording"
+                  >
+                    <Square className="w-2.5 h-2.5 fill-current" />
+                    <span>0:{recordSeconds < 10 ? `0${recordSeconds}` : recordSeconds}</span>
+                  </button>
+                ) : (
                   <button
                     type="button"
                     onClick={startRecording}
-                    className="w-full py-2.5 px-3 rounded-lg bg-white hover:bg-emerald-50/50 border border-emerald-300/80 flex items-center justify-center gap-2 text-[#185E3B] font-bold text-xs transition-all shadow-2xs cursor-pointer group"
+                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                      hasRecordedVoice
+                        ? 'bg-[#E2F3DD] text-[#0C6B44]'
+                        : 'bg-[#F6FAF4] hover:bg-[#E2F3DD] text-[#76857D] hover:text-[#0C6B44] border border-[#E3ECE0]'
+                    }`}
+                    title={hasRecordedVoice ? 'Re-record voice note' : 'Record voice note'}
                   >
-                    <div className="w-6 h-6 rounded-full bg-[#185E3B] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                      <Mic className="w-3.5 h-3.5" />
-                    </div>
-                    <span>Tap to record in Malayalam or English</span>
+                    <Mic className="w-3.5 h-3.5 stroke-[2]" />
                   </button>
                 )}
-
-                {/* Actively Recording State */}
-                {isRecording && (
-                  <div className="flex items-center justify-between p-1 bg-white rounded-lg border border-rose-200 px-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                      <span className="text-xs font-mono font-bold text-rose-600">
-                        0:{recordSeconds < 10 ? `0${recordSeconds}` : recordSeconds}
-                      </span>
-                      {/* Animated sound wave bars */}
-                      <div className="flex items-center gap-0.5 h-4 ml-1">
-                        <span className="w-1 bg-rose-400 rounded-full animate-bounce h-3" />
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-4 [animation-delay:0.1s]" />
-                        <span className="w-1 bg-rose-400 rounded-full animate-bounce h-2 [animation-delay:0.2s]" />
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-4 [animation-delay:0.15s]" />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      <Square className="w-3 h-3 fill-current" />
-                      <span>Stop</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Recorded Voice Note Preview */}
-                {hasRecordedVoice && !isRecording && (
-                  <div className="flex items-center justify-between gap-2 bg-white p-1.5 px-2.5 rounded-lg border border-emerald-200">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <button
-                        type="button"
-                        onClick={togglePlayVoice}
-                        className="w-7 h-7 rounded-full bg-[#185E3B] hover:bg-[#144E31] text-white flex items-center justify-center shrink-0 shadow-xs cursor-pointer"
-                        title={isPlayingVoice ? 'Pause' : 'Play voice note'}
-                      >
-                        {isPlayingVoice ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-                      </button>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-bold text-slate-800">Voice Note</span>
-                          <span className="text-[10px] font-mono text-slate-500 font-semibold">({voiceDuration})</span>
-                        </div>
-                        <span className="text-[10px] text-emerald-700 font-medium block truncate">
-                          {isPlayingVoice ? 'Playing preview...' : 'Attached to request'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={deleteVoiceNote}
-                      className="w-7 h-7 rounded-md hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Delete voice note"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
               </div>
-            )}
+
+              {/* Attached Voice Note preview inside textarea container */}
+              {hasRecordedVoice && !isRecording && (
+                <div className="mt-2 pt-2 border-t border-[#E3ECE0]/80 flex items-center justify-between gap-2 bg-[#F6FAF4] px-2.5 py-1 rounded-lg">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <button
+                      type="button"
+                      onClick={togglePlayVoice}
+                      className="w-5 h-5 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shrink-0 cursor-pointer"
+                      title={isPlayingVoice ? 'Pause' : 'Play voice note'}
+                    >
+                      {isPlayingVoice ? <Pause className="w-2.5 h-2.5 fill-current" /> : <Play className="w-2.5 h-2.5 fill-current ml-0.5" />}
+                    </button>
+                    <span className="text-[10px] font-semibold text-[#16261E] truncate">
+                      Voice Note ({voiceDuration})
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={deleteVoiceNote}
+                    className="p-0.5 text-[#76857D] hover:text-[#D3362B] transition-colors cursor-pointer"
+                    title="Remove voice note"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -453,13 +538,154 @@ export const JobDetailsModal: React.FC = () => {
           <button
             type="button"
             onClick={handleFindWorkers}
-            className="w-full h-12 sm:h-13 rounded-2xl bg-[#185E3B] hover:bg-[#144E31] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(24,94,59,0.28)] transition-all active:scale-[0.99] cursor-pointer group"
+            className="w-full h-11 sm:h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-semibold text-sm sm:text-[15px] flex items-center justify-center shadow-[0_10px_20px_rgba(12,107,68,0.25)] transition-all active:scale-[0.98] cursor-pointer"
           >
-            <span>{targetWorker ? `Book ${targetWorker.name.split(' ')[0]}` : `Find ${selectedCategory || 'Worker'}s`}</span>
-            <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
+            <span>Find Workers</span>
           </button>
         </div>
       </div>
+
+      {/* In-App Standard Month Calendar Grid (Strictly inside mobile container) */}
+      {isDatePickerOpen && (
+        <div 
+          className="absolute inset-0 z-60 flex items-center justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[4px] p-4 animate-fade-in"
+          onClick={() => setIsDatePickerOpen(false)}
+        >
+          <div 
+            className="w-[calc(100%-40px)] max-w-[340px] bg-white rounded-[24px] p-4 shadow-[0_20px_50px_rgba(10,40,25,0.3)] border border-[#E3ECE0] animate-scale-in flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header: Month & Year with Navigation and Close */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#E3ECE0]">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={prevMonth}
+                  className="w-7 h-7 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] flex items-center justify-center text-[#16261E] transition-colors cursor-pointer"
+                  title="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-display text-sm font-bold text-[#16261E] min-w-[120px] text-center">
+                  {calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  type="button"
+                  onClick={nextMonth}
+                  className="w-7 h-7 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] flex items-center justify-center text-[#16261E] transition-colors cursor-pointer"
+                  title="Next month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsDatePickerOpen(false)}
+                className="w-7 h-7 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Weekdays Row */}
+            <div className="grid grid-cols-7 gap-1 pt-3 pb-1 text-center">
+              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((w, idx) => (
+                <span key={idx} className="text-[10px] font-bold text-[#76857D] uppercase">
+                  {w}
+                </span>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-1 pb-2">
+              {getCalendarDays().map((cell, idx) => {
+                if (cell.day === null) {
+                  return <div key={`empty-${idx}`} className="h-8" />;
+                }
+
+                const isSelected = (draftJob.date || todayStr) === cell.dateStr;
+
+                return (
+                  <button
+                    key={cell.dateStr}
+                    type="button"
+                    disabled={cell.isPast}
+                    onClick={() => {
+                      updateDraftJob({ date: cell.dateStr });
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`h-8 w-8 mx-auto rounded-full text-xs font-semibold flex items-center justify-center transition-all ${
+                      cell.isPast
+                        ? 'text-[#CBD8CA] opacity-35 cursor-not-allowed'
+                        : isSelected
+                          ? 'bg-[#0C6B44] text-white font-bold shadow-2xs scale-105 cursor-pointer'
+                          : cell.isToday
+                            ? 'border-1.5 border-[#0C6B44] text-[#0C6B44] font-bold hover:bg-[#E2F3DD] cursor-pointer'
+                            : 'text-[#16261E] hover:bg-[#E2F3DD] cursor-pointer'
+                    }`}
+                  >
+                    {cell.day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Time Picker: 1-Tap Compact Scrollable 30-min Slot List */}
+      {isTimePickerOpen && (
+        <div 
+          className="absolute inset-0 z-60 flex items-center justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[4px] p-4 animate-fade-in"
+          onClick={() => setIsTimePickerOpen(false)}
+        >
+          <div 
+            className="w-[calc(100%-48px)] max-w-[290px] bg-white rounded-[22px] p-3.5 shadow-[0_20px_50px_rgba(10,40,25,0.3)] border border-[#E3ECE0] animate-scale-in flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Compact Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-[#E3ECE0]">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#0C6B44]" />
+                <span className="font-display text-[13px] font-bold text-[#16261E]">Select Start Time</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTimePickerOpen(false)}
+                className="w-6 h-6 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Compact Scrollable List (capped height ~190px for 4-5 visible slots) */}
+            <div className="py-1.5 overflow-y-auto space-y-1 max-h-[190px] pr-1 scrollbar-thin">
+              {TIME_SLOTS.map((slot) => {
+                const isSelected = (draftJob.time || '10:00 AM') === slot;
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => {
+                      updateDraftJob({ time: slot });
+                      setIsTimePickerOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#0C6B44] text-white shadow-2xs font-bold'
+                        : 'bg-[#F6FAF4] hover:bg-[#E2F3DD] text-[#16261E]'
+                    }`}
+                  >
+                    <span>{slot}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

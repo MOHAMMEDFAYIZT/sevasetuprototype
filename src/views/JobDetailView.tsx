@@ -108,7 +108,7 @@ export const JobDetailView: React.FC = () => {
                 Waiting for worker response...
               </h3>
               <p className="text-xs text-amber-900 leading-relaxed font-medium">
-                Your request has been broadcasted to {job.requests.length} worker{job.requests.length > 1 ? 's' : ''}. The first to accept will be matched.
+                We have sent your request to {job.requests.length} worker{job.requests.length > 1 ? 's' : ''}. When they accept, they will be hired for your work.
               </p>
             </div>
           </div>

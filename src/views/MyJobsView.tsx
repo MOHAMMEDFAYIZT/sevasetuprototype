@@ -132,7 +132,7 @@ export const MyJobsView: React.FC = () => {
               <div className="text-xs font-semibold text-slate-700 mb-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
                 {job.status === 'looking' && (
                   <span className="text-amber-900 font-bold">
-                    ⏳ Broadcasted to {pendingCount} worker{pendingCount === 1 ? '' : 's'} · Waiting
+                    ⏳ Request sent to {pendingCount} worker{pendingCount === 1 ? '' : 's'} · Waiting
                   </span>
                 )}
                 {job.status === 'matched' && (
@@ -197,7 +197,7 @@ export const MyJobsView: React.FC = () => {
             <h3 className="text-sm font-extrabold text-slate-900">No {activeJobsTab} jobs</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
               {activeJobsTab === 'active' 
-                ? 'Your active and broadcasted requests will appear here.' 
+                ? 'Your active and sent requests will appear here.' 
                 : 'Completed and cancelled job history appears here.'}
             </p>
           </div>

@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MOST_SEARCHED_SERVICES, OTHER_SERVICES } from '../data/mockData';
-import { Search, X, ArrowRight } from 'lucide-react';
+import { 
+  Search, 
+  X, 
+  ChevronRight, 
+  Languages, 
+  Bell, 
+  Check, 
+  Mic,
+  Clock,
+  Zap,
+  RotateCcw
+} from 'lucide-react';
+import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
 
 const SEARCH_PLACEHOLDERS = [
   "Search 'Electrician'...",
@@ -13,13 +25,141 @@ const SEARCH_PLACEHOLDERS = [
   "Search 'Mechanic'...",
   "Search any service..."
 ];
+// Service Icons extracted from user uploads with distinct hues & ultra-light pastel card backgrounds
+const OTHER_SERVICE_CONFIG: Record<
+  string, 
+  { 
+    iconSrc: string; 
+    bg: string;          // Ultra-light pastel background
+    border: string;      // Matching subtle border
+  }
+> = {
+  'painter': { 
+    iconSrc: '/images/service-icons/painter.png', 
+    bg: 'bg-[#FFF8F0]', 
+    border: 'border-[#FFE2C8]' 
+  },
+  'gardening': { 
+    iconSrc: '/images/service-icons/gardening.png', 
+    bg: 'bg-[#F0FDF4]', 
+    border: 'border-[#D1F7DB]' 
+  },
+  'farm-work': { 
+    iconSrc: '/images/service-icons/farm-work.png', 
+    bg: 'bg-[#FEFCE8]', 
+    border: 'border-[#FEF08A]/80' 
+  },
+  'mechanic': { 
+    iconSrc: '/images/service-icons/mechanic.png', 
+    bg: 'bg-[#F0F7FF]', 
+    border: 'border-[#D0E2FF]' 
+  },
+  'cooking': { 
+    iconSrc: '/images/service-icons/cooking.png', 
+    bg: 'bg-[#FFF5F5]', 
+    border: 'border-[#FED4D4]' 
+  },
+  'transport': { 
+    iconSrc: '/images/service-icons/transport.png', 
+    bg: 'bg-[#F0FDFA]', 
+    border: 'border-[#CCFBF1]' 
+  },
+  'animal-care': { 
+    iconSrc: '/images/service-icons/animal-care.png', 
+    bg: 'bg-[#FDF2F8]', 
+    border: 'border-[#FCE7F3]' 
+  },
+  'general-labour': { 
+    iconSrc: '/images/service-icons/general-labour.png', 
+    bg: 'bg-[#FAF5FF]', 
+    border: 'border-[#E9D5FF]' 
+  },
+  'tailor': { 
+    iconSrc: '/images/service-icons/tailor.png', 
+    bg: 'bg-[#F5F3FF]', 
+    border: 'border-[#DDD6FE]' 
+  },
+};
 
 export const HomePage: React.FC = () => {
-  const { openCreateJobModal } = useApp();
+  const { 
+    openCreateJobModal, 
+    user, 
+    jobs,
+    retryUrgentJob,
+    showToast,
+    language,
+    setLanguage
+  } = useApp();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  // Live timer tick for urgent broadcast banner
+  const [, setTicker] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTicker(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Check if there is an active/pending urgent job for today
+  const urgentJob = jobs.find(j => (j.status === 'looking' || j.status === 'matched') && isJobUrgent(j));
+  const urgentInfo = urgentJob ? getUrgentJobTimeRemaining(urgentJob) : null;
+
+  // Language state for top bar
+  const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(2);
+
+  // Voice Search states
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+
+  const handleStartVoiceSearch = () => {
+    setIsVoiceModalOpen(true);
+    setIsVoiceListening(true);
+
+    const SpeechRecognition = (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any }).SpeechRecognition 
+      || (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any }).webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event: any) => {
+          const spokenText = event.results[0][0]?.transcript;
+          if (spokenText) {
+            setSearchQuery(spokenText);
+            showToast(`Voice Search: "${spokenText}"`);
+          }
+          setIsVoiceListening(false);
+          setIsVoiceModalOpen(false);
+        };
+
+        recognition.onerror = () => {
+          setIsVoiceListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsVoiceListening(false);
+        };
+
+        recognition.start();
+      } catch {
+        setIsVoiceListening(false);
+      }
+    }
+  };
+
+  const handleSelectVoiceQuery = (query: string) => {
+    setSearchQuery(query);
+    setIsVoiceListening(false);
+    setIsVoiceModalOpen(false);
+    showToast(`Searching for "${query}"`);
+  };
 
   // Show splash intro once per browser session
   useEffect(() => {
@@ -39,21 +179,45 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [searchQuery]);
 
-  // Curated bright, daylight, natural photography from verified web CDNs
+  // High-fidelity illustrations uploaded by user for most searched services
   const serviceImageMap: Record<string, string> = {
-    'electrician': 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=500&q=80',
-    'plumber': 'https://images.unsplash.com/photo-1581244277943-fe4a9c77d32e?auto=format&fit=crop&w=500&q=80',
-    'cleaning': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80',
-    'carpenter': 'https://images.unsplash.com/photo-1502005229762-ee1b2da97ba4?auto=format&fit=crop&w=500&q=80',
-    'painter': 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=500&q=80',
-    'gardening': 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500&q=80',
-    'farm-work': 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=500&q=80',
-    'mechanic': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=500&q=80',
-    'cooking': 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=500&q=80',
-    'transport': 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=500&q=80',
-    'animal-care': 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?auto=format&fit=crop&w=500&q=80',
-    'general-labour': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=500&q=80',
-    'tailor': 'https://images.unsplash.com/photo-1528458908906-5b48e35a0f5a?auto=format&fit=crop&w=500&q=80',
+    'electrician': '/images/services/most-searched/electrician.png',
+    'plumber': '/images/services/most-searched/plumber.png',
+    'cleaning': '/images/services/most-searched/cleaning.png',
+    'carpenter': '/images/services/most-searched/carpenter.png',
+  };
+
+  // Distinct matching border shades and tints for each Most Searched card
+  const MOST_SEARCHED_CONFIG: Record<string, {
+    bg: string;
+    border: string;
+    hoverBorder: string;
+    shadow: string;
+  }> = {
+    electrician: {
+      bg: 'bg-[#FEFCE8]',
+      border: 'border-[#FCD34D]',
+      hoverBorder: 'group-hover:border-[#EAB308]',
+      shadow: 'shadow-[0_4px_16px_rgba(202,138,4,0.15)]',
+    },
+    plumber: {
+      bg: 'bg-[#F0F9FF]',
+      border: 'border-[#BAE6FD]',
+      hoverBorder: 'group-hover:border-[#38BDF8]',
+      shadow: 'shadow-[0_4px_16px_rgba(2,132,199,0.15)]',
+    },
+    cleaning: {
+      bg: 'bg-[#F0FDF4]',
+      border: 'border-[#BBF7D0]',
+      hoverBorder: 'group-hover:border-[#4ADE80]',
+      shadow: 'shadow-[0_4px_16px_rgba(22,163,74,0.15)]',
+    },
+    carpenter: {
+      bg: 'bg-[#FFF7ED]',
+      border: 'border-[#FED7AA]',
+      hoverBorder: 'group-hover:border-[#FB923C]',
+      shadow: 'shadow-[0_4px_16px_rgba(234,88,12,0.15)]',
+    },
   };
 
   // When user taps a service, open the Job Details Bottom Sheet Modal directly
@@ -75,186 +239,469 @@ export const HomePage: React.FC = () => {
   const totalResults = filteredMostSearched.length + filteredOtherServices.length;
 
   return (
-    <div className="w-full flex flex-col px-0 pt-0 pb-6">
-      {/* Simple & Reduced Headline (Removed "Good morning" and big text per user instruction) */}
-      <div className="px-5 mt-3 mb-2.5">
-          <h1 className="text-[17px] font-bold text-slate-800 tracking-tight">
-            What service do you need?
-          </h1>
-        </div>
+    <div className="w-full flex flex-col px-0 pt-2 pb-8">
+      {/* Swiggy-Style Top Navigation Header */}
+      <div className="px-5 pt-3 pb-2 flex items-center justify-between select-none">
+        {/* Left: Swiggy-Style Address Block */}
+        <button
+          type="button"
+          onClick={() => navigate('/addresses')}
+          className="flex flex-col items-start text-left group cursor-pointer max-w-[210px] sm:max-w-[240px] focus:outline-none"
+          title="Change Service Location"
+        >
+          <div className="flex items-center gap-1 leading-none">
+            <span className="font-display font-bold text-[17px] sm:text-[18px] text-[#16261E] tracking-tight group-hover:text-[#0C6B44] transition-colors truncate">
+              {user.location || 'Palakkad Town'}
+            </span>
+            <ChevronRight className="w-4 h-4 text-[#16261E] stroke-[2.8] group-hover:translate-x-0.5 group-hover:text-[#0C6B44] transition-all shrink-0" />
+          </div>
+          <span className="text-[11px] sm:text-xs text-[#4F6057] font-medium truncate w-full mt-1">
+            {user.location ? `${user.location}, Palakkad, Kerala` : 'Palakkad District, Kerala • Tap to change'}
+          </span>
+        </button>
 
-        {/* Highly Interactive Search Bar */}
-        <div className="px-5 mb-4">
-          <div 
-            className={`relative flex items-center bg-[#f8faf9] rounded-2xl border transition-all duration-200 ${
-              isSearchFocused 
-                ? 'border-[#185E3B] bg-white ring-3 ring-[#185E3B]/10 shadow-sm' 
-                : 'border-slate-200 hover:border-slate-300 shadow-2xs'
-            }`}
+        {/* Right: Language changing button first, then notification icon */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* 1. Language Changing Button */}
+          <button
+            type="button"
+            onClick={() => setIsLangModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 border border-[#E3ECE0] shadow-[0_2px_8px_rgba(16,60,38,0.06)] hover:bg-[#F6FAF4] hover:border-[#3AAA48]/50 text-[#16261E] active:scale-95 transition-all cursor-pointer"
+            title="Change language / भाषा चुनें"
           >
-            <Search 
-              className={`absolute left-3.5 w-5 h-5 transition-colors stroke-[2] pointer-events-none ${
-                isSearchFocused || searchQuery ? 'text-[#185E3B]' : 'text-slate-400'
-              }`} 
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
-              className="w-full pl-11 pr-10 py-3 rounded-2xl bg-transparent text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 placeholder:transition-opacity"
-            />
+            <Languages className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+            <span className="text-[11px] font-bold text-[#0A5A39]">
+              {language === 'hi' ? 'हिन्दी' : 'EN'}
+            </span>
+          </button>
+
+          {/* 2. Notification Icon Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setUnreadCount(0);
+              navigate('/notifications');
+            }}
+            className="relative w-9 h-9 rounded-full bg-white/90 border border-[#E3ECE0] shadow-[0_2px_8px_rgba(16,60,38,0.06)] hover:bg-[#F6FAF4] hover:border-[#3AAA48]/50 flex items-center justify-center text-[#16261E] active:scale-95 transition-all cursor-pointer"
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4 text-[#16261E] stroke-[2]" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0C6B44] rounded-full ring-2 ring-white animate-pulse" />
+            )}
+          </button>
+        </div>
+      </div>
+
+
+      {/* Modern Search Bar with Voice Search */}
+      <div className="px-5 mt-7 mb-6">
+        <div 
+          className={`relative flex items-center bg-white/95 rounded-[20px] border transition-all duration-200 shadow-[0_4px_16px_rgba(16,60,38,0.05)] ${
+            isSearchFocused 
+              ? 'border-[#3AAA48] ring-3 ring-[#3AAA48]/15 bg-white shadow-sm' 
+              : 'border-[#E3ECE0] hover:border-[#3AAA48]/50'
+          }`}
+        >
+          <Search 
+            className={`absolute left-3.5 w-5 h-5 transition-colors stroke-[2] pointer-events-none ${
+              isSearchFocused || searchQuery ? 'text-[#0C6B44]' : 'text-[#76857D]'
+            }`} 
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
+            className="w-full pl-11 pr-20 py-3.5 rounded-[20px] bg-transparent text-sm font-medium text-[#16261E] outline-none transition-all placeholder:text-[#76857D]"
+          />
+          
+          <div className="absolute right-2.5 flex items-center gap-1.5">
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600 transition-colors cursor-pointer active:scale-90"
+                className="w-6 h-6 rounded-full bg-[#EEF2EC] hover:bg-[#E3ECE0] flex items-center justify-center text-[#4F6057] transition-colors cursor-pointer active:scale-90"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
-          </div>
 
-          {/* Search Result Feedback Badge */}
-          {searchQuery && (
-            <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium px-1 mt-1">
-              <span>{totalResults} service{totalResults !== 1 ? 's' : ''} found</span>
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="text-[#185E3B] font-bold hover:underline"
-              >
-                Reset filter
-              </button>
-            </div>
-          )}
+            {/* Voice Search Button (Swiggy / Zomato style) */}
+            <button
+              type="button"
+              onClick={handleStartVoiceSearch}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
+                isVoiceListening 
+                  ? 'bg-rose-500 text-white animate-pulse ring-4 ring-rose-200' 
+                  : 'bg-[#F1F6F3] hover:bg-[#E2F3DD] text-[#0C6B44]'
+              }`}
+              title="Voice Search / ശബ്ദ തിരയൽ"
+            >
+              <Mic className="w-4 h-4 stroke-[2.3]" />
+            </button>
+          </div>
         </div>
 
-        {/* Section 1: "Most Searched" (Bright Daylight 2x2 Grid) */}
-        {filteredMostSearched.length > 0 && (
-          <div className="px-5 mb-5">
-            <div className="mb-2.5">
-              <h2 className="text-[17px] font-bold text-slate-900 tracking-tight leading-snug">
-                Most Searched
-              </h2>
-              <p className="text-[11px] text-slate-400 font-medium">
-                Common services people look for
-              </p>
+        {/* Search Result Feedback Badge */}
+        {searchQuery && (
+          <div className="flex items-center justify-between text-[11px] text-[#4F6057] font-medium px-1 mt-1.5">
+            <span>{totalResults} service{totalResults !== 1 ? 's' : ''} found</span>
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="text-[#0C6B44] font-bold hover:underline"
+            >
+              Reset filter
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Top Card for Urgent Job (First Card) */}
+      {urgentJob && !searchQuery && (
+        <div className="px-5 mb-5 select-none animate-slide-up">
+          <div 
+            onClick={() => navigate(`/jobs/${urgentJob.id}`)}
+            className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-[0_8px_24px_rgba(217,119,6,0.3)] border border-amber-300/40 cursor-pointer active:scale-[0.99] transition-all"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-[10px] font-extrabold uppercase tracking-wider text-white">
+                <Zap className="w-3 h-3 fill-white" />
+                <span>Urgent Request (5m Life)</span>
+              </span>
+
+              {urgentJob.status === 'looking' && urgentInfo && (
+                urgentInfo.isExpired ? (
+                  <span className="text-[11px] font-bold bg-white/25 px-2.5 py-0.5 rounded-full text-white">
+                    Window Expired
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-white flex items-center gap-1 bg-black/20 px-2.5 py-0.5 rounded-full">
+                    <Clock className="w-3 h-3 animate-spin" />
+                    <span>{urgentInfo.formatted} left</span>
+                  </span>
+                )
+              )}
+
+              {urgentJob.status === 'matched' && (
+                <span className="text-[11px] font-bold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  <span>Matched!</span>
+                </span>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {filteredMostSearched.map(service => {
-                const imgPath = serviceImageMap[service.id];
-                return (
-                  <div
-                    key={service.id}
-                    onClick={() => handleSelectService(service.name)}
-                    className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] group select-none border border-slate-200/90"
-                    title={`Request ${service.name}`}
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display text-base font-bold text-white truncate">
+                  {urgentJob.category} Service
+                </h3>
+                <p className="text-xs text-amber-100 font-medium truncate mt-0.5">
+                  {urgentJob.status === 'matched'
+                    ? 'Worker confirmed! Tap to view details & phone'
+                    : urgentInfo?.isExpired
+                      ? '5-minute window finished • Tap to rebroadcast'
+                      : 'Searching nearby active workers...'}
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                {urgentJob.status === 'looking' && urgentInfo?.isExpired ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      retryUrgentJob(urgentJob.id);
+                    }}
+                    className="px-3 py-1.5 rounded-full bg-white text-amber-800 font-bold text-xs shadow-md flex items-center gap-1 active:scale-95 transition-transform"
                   >
-                    {/* Bright Daylight Photo Frame (No dark black scrims) */}
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                    <RotateCcw className="w-3 h-3 stroke-[2.2]" />
+                    <span>Retry</span>
+                  </button>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 1: "Most Searched" (RailOne Journey Planner Style - 2 per line, 4 cards total) */}
+      {filteredMostSearched.length > 0 && (
+        <div className="px-5 mb-7">
+          <div className="mb-3">
+            <h2 className="font-display text-[18px] font-bold text-[#16261E] tracking-tight leading-snug">
+              Most Searched
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+            {filteredMostSearched.slice(0, 4).map(service => {
+              const imgPath = serviceImageMap[service.id];
+              const config = MOST_SEARCHED_CONFIG[service.id] || {
+                bg: 'bg-[#F6FAF4]',
+                border: 'border-[#CBD8CA]',
+                hoverBorder: 'group-hover:border-[#0C6B44]/60',
+                shadow: 'shadow-[0_4px_16px_rgba(12,60,35,0.08)]',
+              };
+              return (
+                <div
+                  key={service.id}
+                  onClick={() => handleSelectService(service.name)}
+                  className="group flex flex-col cursor-pointer active:scale-[0.98] transition-transform select-none"
+                  title={`Request ${service.name}`}
+                >
+                  {/* Journey Planner Illustration Card Tile with card-tinted distinct border & soft shadow */}
+                  <div className={`w-full aspect-[16/11] rounded-[22px] overflow-hidden ${config.bg} border-2 ${config.border} ${config.hoverBorder} ${config.shadow} group-hover:-translate-y-0.5 transition-all p-1`}>
+                    <div className="w-full h-full rounded-[18px] overflow-hidden bg-white">
                       <img 
                         src={imgPath} 
                         alt={service.name} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = `/images/services/clean/${service.id.replace('-', '_')}.jpg`;
-                        }}
                       />
                     </div>
-                    {/* Solid White Content Base with High-Contrast Dark Text */}
-                    <div className="p-3 flex flex-col justify-between flex-1 bg-white">
-                      <div>
-                        <h3 className="text-slate-900 font-bold text-sm sm:text-base leading-snug group-hover:text-[#185E3B] transition-colors">
-                          {service.name}
-                        </h3>
-                        <p className="text-slate-500 text-[11px] font-medium line-clamp-1 mt-0.5">
-                          {service.desc}
-                        </p>
-                      </div>
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-[#185E3B]">
-                        <span>Book Service</span>
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* Section 2: "Other Services" (Spacious 3x3 Circular Avatar Grid - Bharat Pattern) */}
-        {filteredOtherServices.length > 0 && (
-          <div className="px-5 mb-6">
-            <div className="mb-3.5">
-              <h2 className="text-[17px] font-bold text-slate-900 tracking-tight leading-snug">
-                Other Services
-              </h2>
-              <p className="text-[11px] text-slate-400 font-medium">
-                More ways to get things done
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 sm:gap-4">
-              {filteredOtherServices.map(service => {
-                const imgPath = serviceImageMap[service.id];
-                return (
-                  <div
-                    key={service.id}
-                    onClick={() => handleSelectService(service.name)}
-                    className="flex flex-col items-center justify-between bg-white rounded-2xl py-3.5 px-2.5 sm:py-4 sm:px-3 border border-slate-200/90 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.96] group select-none text-center"
-                    title={`Request ${service.name}`}
-                  >
-                    {/* Circular Bright Daylight Photo Frame with Breathing Space */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden p-0.5 bg-gradient-to-br from-emerald-100 to-emerald-50 border border-emerald-200/80 shadow-2xs group-hover:ring-3 group-hover:ring-[#185E3B]/25 transition-all shrink-0">
-                      <img 
-                        src={imgPath} 
-                        alt={service.name} 
-                        className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = `/images/services/clean/${service.id.replace('-', '_')}.jpg`;
-                        }}
-                      />
-                    </div>
-                    {/* Clear Label & Category Underneath */}
-                    <div className="mt-2.5 flex flex-col items-center w-full">
-                      <h3 className="text-slate-900 font-bold text-xs sm:text-[13px] leading-tight group-hover:text-[#185E3B] transition-colors truncate max-w-full">
-                        {service.name}
-                      </h3>
-                      <span className="text-[10px] text-slate-400 font-medium line-clamp-1 mt-0.5">
-                        {service.desc.split(',')[0]}
-                      </span>
-                    </div>
+                  {/* Separated Label Below Card (RailOne Style) */}
+                  <div className="mt-2.5 px-1 flex flex-col items-center text-center">
+                    <h3 className="font-display text-[#16261E] font-bold text-sm sm:text-base leading-tight group-hover:text-[#0C6B44] transition-colors">
+                      {service.name}
+                    </h3>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Section 2: "Other Services" (3 in a line, RailOne Pastel Rectangles, Direct Visual Icons) */}
+      {filteredOtherServices.length > 0 && (
+        <div className="px-5 mb-7">
+          <div className="mb-3">
+            <h2 className="font-display text-[18px] font-bold text-[#16261E] tracking-tight leading-snug">
+              Other Services
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            {filteredOtherServices.map(service => {
+              const config = OTHER_SERVICE_CONFIG[service.id] || {
+                iconSrc: `/images/service-icons/${service.id}.png`,
+                bg: 'bg-[#DCFCE7]',
+                border: 'border-[#BBF7D0]'
+              };
+              return (
+                <div
+                  key={service.id}
+                  onClick={() => handleSelectService(service.name)}
+                  className="group flex flex-col items-center cursor-pointer active:scale-[0.96] transition-transform select-none"
+                  title={`Request ${service.name}`}
+                >
+                  {/* RailOne Style Pastel Rounded Rectangle Card Tile with User's Extracted Icons */}
+                  <div className={`w-full aspect-[4/3] rounded-[20px] sm:rounded-[22px] flex items-center justify-center p-2.5 sm:p-3.5 ${config.bg} border ${config.border} shadow-[0_3px_12px_rgba(16,60,38,0.04)] group-hover:shadow-[0_8px_20px_rgba(16,60,38,0.09)] group-hover:-translate-y-0.5 transition-all`}>
+                    <img 
+                      src={config.iconSrc} 
+                      alt={service.name} 
+                      className="w-13 h-13 sm:w-16 sm:h-16 object-contain transition-transform group-hover:scale-110 duration-200" 
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Separated Label Underneath - Clean Name Only (No Sub-description) */}
+                  <div className="mt-2 px-1 flex flex-col items-center text-center w-full">
+                    <span className="font-display text-[#16261E] font-semibold text-xs sm:text-sm leading-tight group-hover:text-[#0C6B44] transition-colors truncate max-w-full">
+                      {service.name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
         {/* Empty Search State */}
         {filteredMostSearched.length === 0 && filteredOtherServices.length === 0 && (
           <div className="px-5 py-12 text-center">
-            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
-              <Search className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-full bg-white border border-[#E3ECE0] flex items-center justify-center mx-auto mb-3 text-[#4F6057] shadow-xs">
+              <Search className="w-7 h-7 stroke-[1.8]" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">No services found</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+            <h3 className="font-display text-base font-semibold text-[#16261E]">No services found</h3>
+            <p className="text-xs text-[#4F6057] mt-1 max-w-xs mx-auto">
               We couldn't find matching services for "{searchQuery}".
             </p>
             <button
               onClick={() => setSearchQuery('')}
-              className="mt-4 px-4 py-2 rounded-xl bg-[#185E3B] text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+              className="mt-4 px-5 py-2.5 rounded-full bg-[#0C6B44] text-white text-xs font-bold transition-all cursor-pointer shadow-[0_8px_16px_rgba(10,90,57,0.2)] active:scale-95"
             >
               Clear Search
             </button>
           </div>
         )}
+
+      {/* Language Switcher Modal */}
+      {isLangModalOpen && (
+        <div 
+          className="absolute inset-0 z-50 flex items-end justify-center bg-[rgba(15,40,28,0.4)] backdrop-blur-[4px] animate-fade-in p-0"
+          onClick={() => setIsLangModalOpen(false)}
+        >
+          <div 
+            className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-5 sm:p-6 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up max-h-[85%]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-11 h-1.5 bg-[#CBD8CA] rounded-full mx-auto mb-4" />
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-display text-lg font-bold text-[#16261E]">Select Language</h3>
+                <p className="text-xs text-[#4F6057]">भाषा का चयन करें</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsLangModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] border border-[#E3ECE0] flex items-center justify-center text-[#76857D] hover:text-[#16261E] cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4 stroke-[2.2]" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 my-4">
+              {/* English Option */}
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('en');
+                  setIsLangModalOpen(false);
+                  showToast('Language updated to English');
+                }}
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  language === 'en'
+                    ? 'border-[#0C6B44] bg-[#E2F3DD] text-[#0A5A39] shadow-2xs'
+                    : 'border-[#E3ECE0] hover:bg-[#F6FAF4] text-[#16261E] bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs ${
+                    language === 'en' ? 'bg-[#0C6B44] text-white' : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    EN
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm block">English</span>
+                    <span className="text-[11px] text-[#4F6057]">Standard app language</span>
+                  </div>
+                </div>
+                {language === 'en' && <Check className="w-4 h-4 text-[#0C6B44] stroke-[2.5]" />}
+              </button>
+
+              {/* Hindi Option */}
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('hi');
+                  setIsLangModalOpen(false);
+                  showToast('भाषा हिन्दी में बदल दी गई है');
+                }}
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  language === 'hi'
+                    ? 'border-[#0C6B44] bg-[#E2F3DD] text-[#0A5A39] shadow-2xs'
+                    : 'border-[#E3ECE0] hover:bg-[#F6FAF4] text-[#16261E] bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs ${
+                    language === 'hi' ? 'bg-[#0C6B44] text-white' : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    हि
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm block">हिन्दी (Hindi)</span>
+                    <span className="text-[11px] text-[#4F6057]">सभी ग्रामीण सेवाओं के लिए</span>
+                  </div>
+                </div>
+                {language === 'hi' && <Check className="w-4 h-4 text-[#0C6B44] stroke-[2.5]" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Voice Search Listening Modal (Swiggy / Zomato style) */}
+      {isVoiceModalOpen && (
+        <div 
+          className="absolute inset-0 z-50 flex items-end justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[5px] animate-fade-in p-0"
+          onClick={() => {
+            setIsVoiceListening(false);
+            setIsVoiceModalOpen(false);
+          }}
+        >
+          <div 
+            className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-6 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col items-center text-center max-h-[85%]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-11 h-1.5 bg-[#CBD8CA] rounded-full mx-auto mb-4" />
+            
+            {/* Animated Pulsing Voice Rings */}
+            <div className="relative my-4 flex items-center justify-center">
+              <span className="absolute w-24 h-24 rounded-full bg-[#3AAA48]/20 animate-ping" />
+              <span className="absolute w-20 h-20 rounded-full bg-[#E2F3DD] animate-pulse" />
+              <div className="relative z-10 w-16 h-16 rounded-full bg-[#0C6B44] text-white flex items-center justify-center shadow-md">
+                <Mic className="w-8 h-8 stroke-[2.2]" />
+              </div>
+            </div>
+
+            <h3 className="font-display text-xl font-bold text-[#16261E] mt-2">
+              Listening...
+            </h3>
+            <p className="text-xs text-[#4F6057] mt-1 max-w-xs font-medium">
+              Say the service you need, or choose from suggestions below:
+            </p>
+
+            {/* Quick Voice Suggestion Chips */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-5 mb-2 w-full">
+              {[
+                'Electrician',
+                'Plumber',
+                'Cleaning',
+                'Carpenter',
+                'Painter',
+                'Farm Work',
+                'Gardening',
+                'Mechanic'
+              ].map(query => (
+                <button
+                  key={query}
+                  type="button"
+                  onClick={() => handleSelectVoiceQuery(query)}
+                  className="px-3.5 py-1.5 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] border border-[#E3ECE0] hover:border-[#0C6B44] text-xs font-semibold text-[#16261E] hover:text-[#0A5A39] transition-all cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  {query}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsVoiceListening(false);
+                setIsVoiceModalOpen(false);
+              }}
+              className="mt-4 w-full py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       </div>
   );

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { UserProfile, Job, AppScreen, Worker } from '../types';
 import { INITIAL_JOBS, WORKERS_DATABASE } from '../data/mockData';
+import { TRANSLATIONS, type Language } from '../utils/translations';
 
 interface DraftJob {
   category: string;
@@ -14,9 +15,13 @@ interface DraftJob {
   wageMax: number;
   hasVoiceNote?: boolean;
   voiceNoteDuration?: string;
+  workersNeeded?: number;
 }
 
 interface AppContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
   user: UserProfile;
   updateUser: (updates: Partial<UserProfile>) => void;
   screen: AppScreen;
@@ -51,10 +56,11 @@ interface AppContextType {
   completeJob: (jobId: number) => void;
   rateJob: (jobId: number, stars: number) => void;
   callWorker: (worker: Worker) => void;
+  retryUrgentJob: (jobId: number) => void;
   
   // Simulator Triggers
-  simulateWorkerAcceptance: (jobId: number) => void;
-  simulateWorkerCancellation: (jobId: number) => void;
+  simulateWorkerAcceptance: (jobId: number, targetWorkerId?: number) => void;
+  simulateWorkerCancellation: (jobId: number, targetWorkerId?: number) => void;
   simulateNoWorkerAccepts: (jobId: number) => void;
   simulateResetJob: (jobId: number) => void;
 
@@ -83,12 +89,36 @@ interface AppContextType {
   rateTargetJobId: number | null;
   openRateModal: (jobId: number) => void;
   closeRateModal: () => void;
+  profileWorker: Worker | null;
+  profileWorkerSource: 'list' | 'favourites';
+  openWorkerProfile: (worker: Worker, source?: 'list' | 'favourites') => void;
+  closeWorkerProfile: () => void;
+  sentJobConfirmation: { jobId: number; workerCount: number; category: string } | null;
+  openSentJobConfirmation: (jobId: number, workerCount: number, category: string) => void;
+  closeSentJobConfirmation: () => void;
+  isKeyboardOpen: boolean;
+  openKeyboard: () => void;
+  closeKeyboard: () => void;
   resetDemoData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguageState] = useState<Language>(() => {
+    const saved = localStorage.getItem('SEVA_SETU_LANG') as Language;
+    return (saved === 'hi' || saved === 'en') ? saved : 'en';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('SEVA_SETU_LANG', lang);
+  };
+
+  const t = (key: string): string => {
+    return TRANSLATIONS[language]?.[key] || TRANSLATIONS['en']?.[key] || key;
+  };
+
   const [user, setUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('SEVA_SETU_USER_PROD');
     return saved ? JSON.parse(saved) : {
@@ -111,18 +141,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     locationMode: 'saved',
     description: '',
     wageMin: 350,
-    wageMax: 500
+    wageMax: 500,
+    workersNeeded: 1
   });
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([1, 2]);
   const [favourites, setFavourites] = useState<number[]>([1, 10, 20]);
   const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('SEVA_SETU_JOBS_V3');
+    const saved = localStorage.getItem('SEVA_SETU_JOBS_V6');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length >= 5) return parsed;
-      } catch (e) {
+      } catch {
         // fallback
       }
     }
@@ -143,6 +174,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [completeTargetJobId, setCompleteTargetJobId] = useState<number | null>(null);
   const [isRateModalOpen, setIsRateModalOpen] = useState(false);
   const [rateTargetJobId, setRateTargetJobId] = useState<number | null>(null);
+  const [profileWorker, setProfileWorker] = useState<Worker | null>(null);
+  const [profileWorkerSource, setProfileWorkerSource] = useState<'list' | 'favourites'>('list');
+  const [sentJobConfirmation, setSentJobConfirmation] = useState<{
+    jobId: number;
+    workerCount: number;
+    category: string;
+  } | null>(null);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const openKeyboard = () => setIsKeyboardOpen(true);
+  const closeKeyboard = () => setIsKeyboardOpen(false);
 
   // Sync to localStorage
   useEffect(() => {
@@ -150,7 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('SEVA_SETU_JOBS_V3', JSON.stringify(jobs));
+    localStorage.setItem('SEVA_SETU_JOBS_V6', JSON.stringify(jobs));
   }, [jobs]);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,6 +253,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     navigateTo('job-detail');
   };
 
+  const openWorkerProfile = (worker: Worker, source: 'list' | 'favourites' = 'list') => {
+    setProfileWorker(worker);
+    setProfileWorkerSource(source);
+  };
+  const closeWorkerProfile = () => {
+    setProfileWorker(null);
+    setProfileWorkerSource('list');
+  };
+
+  const openSentJobConfirmation = (jobId: number, workerCount: number, category: string) => {
+    setSentJobConfirmation({ jobId, workerCount, category });
+  };
+  const closeSentJobConfirmation = () => setSentJobConfirmation(null);
+
   const createJobFromDraft = () => {
     const newJob: Job = {
       id: Date.now(),
@@ -232,9 +287,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setJobs(prev => [newJob, ...prev]);
     setIsConfirmModalOpen(false);
-    showToast(`Request sent to ${selectedWorkerIds.length} workers!`);
     setCurrentJobId(newJob.id);
-    navigateTo('job-detail');
+    setSentJobConfirmation({
+      jobId: newJob.id,
+      workerCount: selectedWorkerIds.length,
+      category: newJob.category
+    });
   };
 
   const createJobWithRequests = () => {
@@ -431,25 +489,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Dialing ${worker.name} (${worker.phone})...`);
   };
 
-  // Simulator Triggers
-  const simulateWorkerAcceptance = (jobId: number) => {
+  const retryUrgentJob = (jobId: number) => {
     setJobs(prev => prev.map(j => {
       if (j.id === jobId) {
-        const pendingReq = j.requests.find(r => r.status === 'pending') || j.requests[0];
-        if (!pendingReq) return j;
+        return {
+          ...j,
+          status: 'looking',
+          createdAt: new Date().toISOString(),
+          requests: j.requests.map(r => ({
+            ...r,
+            status: r.status === 'accepted' ? 'accepted' : 'pending'
+          }))
+        };
+      }
+      return j;
+    }));
+    showToast('⚡ Urgent request rebroadcasted to nearby workers!');
+  };
+
+  // Simulator Triggers
+  const simulateWorkerAcceptance = (jobId: number, targetWorkerId?: number) => {
+    setJobs(prev => prev.map(j => {
+      if (j.id === jobId) {
+        const pendingReq = targetWorkerId 
+          ? j.requests.find(r => r.workerId === targetWorkerId && r.status === 'pending')
+          : j.requests.find(r => r.status === 'pending');
+          
+        if (!pendingReq) {
+          showToast('All requested workers have already responded.');
+          return j;
+        }
 
         const updatedRequests = j.requests.map(r => {
           if (r.workerId === pendingReq.workerId) {
             return { ...r, status: 'accepted' as const };
           }
-          if (r.status !== 'rejected') {
-            return { ...r, status: 'inactive' as const };
-          }
           return r;
         });
 
-        const matchedWorker = WORKERS_DATABASE.find(w => w.id === pendingReq.workerId);
-        showToast(`${matchedWorker?.name || 'Worker'} accepted! Job is now Matched.`);
+        const acceptedWorker = WORKERS_DATABASE.find(w => w.id === pendingReq.workerId);
+        const acceptedCount = updatedRequests.filter(r => r.status === 'accepted').length;
+        const totalCount = updatedRequests.length;
+        
+        showToast(`🎉 ${acceptedWorker?.name || 'Worker'} accepted your request! (${acceptedCount} of ${totalCount} workers hired)`);
 
         return {
           ...j,
@@ -461,31 +543,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
-  const simulateWorkerCancellation = (jobId: number) => {
+  const simulateWorkerCancellation = (jobId: number, targetWorkerId?: number) => {
     setJobs(prev => prev.map(j => {
       if (j.id === jobId) {
-        const acceptedReq = j.requests.find(r => r.status === 'accepted');
+        const acceptedReq = targetWorkerId
+          ? j.requests.find(r => r.workerId === targetWorkerId && r.status === 'accepted')
+          : j.requests.find(r => r.status === 'accepted');
+
         if (!acceptedReq) {
-          showToast('Job is not matched yet.');
+          showToast('No accepted workers found to cancel.');
           return j;
         }
 
         const matchedWorker = WORKERS_DATABASE.find(w => w.id === acceptedReq.workerId);
-        showToast(`${matchedWorker?.name || 'Worker'} cancelled. Previous requests reactivated!`);
 
         const updatedRequests = j.requests.map(r => {
-          if (r.status === 'accepted') {
+          if (r.workerId === acceptedReq.workerId) {
             return { ...r, status: 'cancelled' as const };
-          }
-          if (r.status === 'inactive') {
-            return { ...r, status: 'pending' as const };
           }
           return r;
         });
 
+        const remainingAccepted = updatedRequests.filter(r => r.status === 'accepted').length;
+        const remainingPending = updatedRequests.filter(r => r.status === 'pending').length;
+
+        showToast(`${matchedWorker?.name || 'Worker'} cancelled their acceptance.`);
+
         return {
           ...j,
-          status: 'looking',
+          status: remainingAccepted > 0 ? 'matched' : (remainingPending > 0 ? 'looking' : 'unfilled'),
           requests: updatedRequests
         };
       }
@@ -496,7 +582,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const simulateNoWorkerAccepts = (jobId: number) => {
     setJobs(prev => prev.map(j => {
       if (j.id === jobId) {
-        showToast('No worker accepted. Job moved to Past (Unfilled).');
+        showToast('No workers were available right now. You can try booking again.');
         return {
           ...j,
           status: 'unfilled',
@@ -510,7 +596,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const simulateResetJob = (jobId: number) => {
     setJobs(prev => prev.map(j => {
       if (j.id === jobId) {
-        showToast('Job reset to Looking for Worker.');
+        showToast('Request reset to waiting for worker reply.');
         return {
           ...j,
           status: 'looking',
@@ -529,8 +615,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDraftJob(prev => ({
         ...prev,
         category: cat,
-        date: new Date().toISOString().split('T')[0],
-        location: prev.locationMode === 'current' ? prev.location : (user.location || 'Palakkad Town')
+        date: prev.date || new Date().toISOString().split('T')[0],
+        time: prev.time || '10:00 AM',
+        location: prev.locationMode === 'current' ? prev.location : (user.location || 'Palakkad Town'),
+        workersNeeded: prev.workersNeeded || 1
       }));
     }
     setIsCreateJobModalOpen(true);
@@ -588,6 +676,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider
       value={{
+        language,
+        setLanguage,
+        t,
         user,
         updateUser,
         screen,
@@ -619,6 +710,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeJob,
         rateJob,
         callWorker,
+        retryUrgentJob,
         simulateWorkerAcceptance,
         simulateWorkerCancellation,
         simulateNoWorkerAccepts,
@@ -647,6 +739,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         rateTargetJobId,
         openRateModal,
         closeRateModal,
+        profileWorker,
+        profileWorkerSource,
+        openWorkerProfile,
+        closeWorkerProfile,
+        sentJobConfirmation,
+        openSentJobConfirmation,
+        closeSentJobConfirmation,
+        isKeyboardOpen,
+        openKeyboard,
+        closeKeyboard,
         resetDemoData
       }}
     >

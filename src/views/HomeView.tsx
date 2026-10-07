@@ -108,7 +108,7 @@ export const HomeView: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm font-bold text-white">
-                {activeJob.category} ({activeJob.status === 'matched' ? 'Matched with Worker' : 'Broadcasting Requests'})
+                {activeJob.category} ({activeJob.status === 'matched' ? 'Matched with Worker' : 'Finding Workers'})
               </p>
             </div>
           </div>

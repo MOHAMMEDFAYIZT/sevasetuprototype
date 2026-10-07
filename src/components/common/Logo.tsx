@@ -36,7 +36,7 @@ export const Logo: React.FC<LogoProps> = ({
             Seva
           </span>
           <span className="text-[22px] font-black text-[#1B5E3C] tracking-tight ml-1">
-            Sethu
+            Setu
           </span>
         </div>
       </div>
@@ -79,7 +79,7 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       <h1 className={`${sizeClasses[size].text} font-black text-[#1B5E3C] tracking-tight mt-1`}>
-        Seva Sethu
+        Seva Setu
       </h1>
 
       {showTagline && (

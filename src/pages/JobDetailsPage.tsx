@@ -1,26 +1,112 @@
-import React, { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { WORKERS_DATABASE } from '../data/mockData';
+import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
 import { 
   ChevronLeft,
   Phone, 
   MapPin, 
   Calendar, 
   CheckCircle2, 
-  XCircle, 
   Star, 
   IndianRupee,
-  AlertCircle,
-  Radio,
-  ShieldCheck,
-  ChevronDown,
-  ChevronUp,
-  UserCheck,
+  Users,
+  Clock,
+  ChevronRight,
+  Sparkles,
   Plus,
-  ArrowRight,
-  Heart
+  Zap,
+  RotateCcw
 } from 'lucide-react';
+
+// Exact service illustrations used across HomePage and MyJobs
+const SERVICE_ILLUSTRATIONS: Record<string, string> = {
+  'electrician': '/images/services/most-searched/electrician.png',
+  'plumber': '/images/services/most-searched/plumber.png',
+  'cleaning': '/images/services/most-searched/cleaning.png',
+  'carpenter': '/images/services/most-searched/carpenter.png',
+  'painter': '/images/service-icons/painter.png',
+  'gardening': '/images/service-icons/gardening.png',
+  'farm-work': '/images/service-icons/farm-work.png',
+  'farm work': '/images/service-icons/farm-work.png',
+  'mechanic': '/images/service-icons/mechanic.png',
+  'cooking': '/images/service-icons/cooking.png',
+  'transport': '/images/service-icons/transport.png',
+  'animal-care': '/images/service-icons/animal-care.png',
+  'animal care': '/images/service-icons/animal-care.png',
+  'general-labour': '/images/service-icons/general-labour.png',
+  'general labour': '/images/service-icons/general-labour.png',
+  'tailor': '/images/service-icons/tailor.png',
+};
+
+const getServiceIllustration = (category: string) => {
+  const slug = (category || 'Electrician').toLowerCase().replace(/\s+/g, '-');
+  if (SERVICE_ILLUSTRATIONS[slug]) return SERVICE_ILLUSTRATIONS[slug];
+  const simple = category.toLowerCase().trim();
+  if (SERVICE_ILLUSTRATIONS[simple]) return SERVICE_ILLUSTRATIONS[simple];
+  return '/images/services/most-searched/electrician.png';
+};
+
+// Compact, intuitive Slide-to-Cancel slider component
+const SlideToCancel: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
+  const [sliderPosition, setSliderPosition] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const maxSlide = 210; // comfortable slide distance
+
+  const handleStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleMove = (clientX: number) => {
+    if (!isDragging || !trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const newPos = Math.max(0, Math.min(clientX - rect.left - 20, maxSlide));
+    setSliderPosition(newPos);
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (sliderPosition >= maxSlide * 0.8) {
+      setSliderPosition(maxSlide);
+      onCancel();
+    } else {
+      setSliderPosition(0);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center pt-2 select-none">
+      <div 
+        ref={trackRef}
+        className="w-[260px] h-11 rounded-full bg-rose-50 border border-rose-200 relative flex items-center px-1 overflow-hidden shadow-2xs"
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onTouchEnd={handleEnd}
+        onMouseMove={(e) => isDragging && handleMove(e.clientX)}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+      >
+        {/* Track label */}
+        <span className="w-full text-center text-[11px] font-bold text-rose-500 tracking-wide pointer-events-none pl-6">
+          Slide to cancel request ❯❯
+        </span>
+
+        {/* Drag handle thumb */}
+        <div 
+          style={{ transform: `translateX(${sliderPosition}px)` }}
+          onMouseDown={handleStart}
+          onTouchStart={handleStart}
+          className="absolute left-1 w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md cursor-grab active:cursor-grabbing transition-transform"
+        >
+          <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const JobDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,37 +115,51 @@ export const JobDetailsPage: React.FC = () => {
     jobs, 
     currentJobId, 
     callWorker, 
-    openCancelModal, 
+    cancelJob,
     openCompleteConfirmModal, 
     openRateModal,
-    openCreateJobModal,
-    favourites,
-    toggleFavourite
+    requestMoreWorkers,
+    retryUrgentJob,
+    showToast
   } = useApp();
-
-  const [workersListExpanded, setWorkersListExpanded] = useState(true);
 
   const jobId = id ? Number(id) : currentJobId;
   const job = jobs.find(j => j.id === jobId) || jobs[0];
 
+  // Urgency check and live timer
+  const isUrgent = job ? isJobUrgent(job) : false;
+  const [, setTicker] = useState(0);
+
+  useEffect(() => {
+    if (!isUrgent) return;
+    const interval = setInterval(() => {
+      setTicker(t => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isUrgent]);
+
   if (!job) {
     return (
-      <div className="w-full flex justify-center pb-28 pt-6">
+      <div className="w-full flex justify-center pb-28 pt-24">
         <div className="w-full max-w-[430px] p-6 text-center">
           <h2 className="text-lg font-bold text-slate-800">Job not found</h2>
-          <Link to="/jobs" className="mt-4 inline-block text-[#1B5E3C] font-bold text-sm underline">
+          <button 
+            type="button"
+            onClick={() => navigate('/jobs')} 
+            className="mt-4 inline-block text-[#0C6B44] font-bold text-sm underline cursor-pointer"
+          >
             Go back to My Jobs
-          </Link>
+          </button>
         </div>
       </div>
     );
   }
 
-  // Find accepted worker (if matched)
-  const acceptedRequest = job.requests.find(r => r.status === 'accepted');
-  const matchedWorker = acceptedRequest 
-    ? WORKERS_DATABASE.find(w => w.id === acceptedRequest.workerId)
-    : null;
+  const isMatched = job.status === 'matched';
+  const isLooking = job.status === 'looking';
+  const isCompleted = job.status === 'completed';
+  const isCancelled = job.status === 'cancelled';
+  const isActive = isLooking || isMatched;
 
   // Format date nicely
   const formatDate = (dateStr: string) => {
@@ -72,491 +172,347 @@ export const JobDetailsPage: React.FC = () => {
     }
   };
 
-  // Determine current lifecycle step for progress stepper (1: Broadcasted, 2: Matched, 3: Completed)
-  const getStepStatus = () => {
-    if (job.status === 'looking') return 1;
-    if (job.status === 'matched') return 2;
-    if (job.status === 'completed') return 3;
-    return 0; // cancelled or unfilled
+  const handleCancelJob = () => {
+    cancelJob(job.id);
+    showToast('Job request cancelled');
   };
 
-  const currentStep = getStepStatus();
-  const isCancelled = job.status === 'cancelled';
-  const isUnfilled = job.status === 'unfilled';
-  const isActive = job.status === 'looking' || job.status === 'matched';
-  const isLooking = job.status === 'looking';
-
   return (
-    <div className="w-full flex flex-col px-4 sm:px-5 pt-3 pb-24 bg-[#F4F7F5] min-h-[calc(100vh-64px)]">
+    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
       
-      {/* Top Navigation Header */}
-      <div className="flex items-center justify-between gap-3 mb-3 select-none">
-        <div className="flex items-center gap-2.5">
-          <Link
-            to="/jobs"
-            className="w-9 h-9 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors shadow-2xs border border-slate-200/80 cursor-pointer"
-            title="Back to My Jobs"
-          >
-            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          </Link>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-[#1B5E3C] uppercase tracking-wider">
-                Request #{job.id.toString().slice(-4)}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
-              <span className="text-[11px] font-semibold text-slate-400">
-                {formatDate(job.date)}
-              </span>
-            </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-              {job.category}
-            </h1>
-          </div>
-        </div>
+      {/* Top Bar: Back Button & Status Badge (Clean, No Job ID) */}
+      <div className="mt-22 flex items-center justify-between gap-3 mb-2 select-none">
+        <button
+          type="button"
+          onClick={() => navigate('/jobs')}
+          className="w-9 h-9 rounded-full bg-white hover:bg-[#E2F3DD] border border-[#CBD8CA] flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-colors shadow-2xs cursor-pointer active:scale-95"
+          title="Back to My Jobs"
+        >
+          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+        </button>
 
         {/* Real-time Status Badge */}
         <div>
-          {job.status === 'looking' && (
-            <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 text-[11px] font-bold flex items-center gap-1.5 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-              Broadcasting
+          {isLooking && (
+            isUrgent && getUrgentJobTimeRemaining(job).isExpired ? (
+              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5 shadow-2xs">
+                <Clock className="w-3.5 h-3.5 text-amber-700" />
+                <span>Broadcast Expired</span>
+              </span>
+            ) : isUrgent ? (
+              <span className="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs animate-pulse">
+                <Zap className="w-3.5 h-3.5 fill-white" />
+                <span>Urgent • {getUrgentJobTimeRemaining(job).formatted} left</span>
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200 flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span>Looking for Workers</span>
+              </span>
+            )
+          )}
+          {isMatched && (
+            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#3AAA48]/30 flex items-center gap-1 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Worker Matched</span>
             </span>
           )}
-          {job.status === 'matched' && (
-            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[11px] font-bold flex items-center gap-1 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              Worker Matched
-            </span>
-          )}
-          {job.status === 'completed' && (
-            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#1B5E3C]" />
-              Completed
+          {isCompleted && (
+            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#CBD8CA] flex items-center gap-1 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Completed</span>
             </span>
           )}
           {isCancelled && (
-            <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold shadow-2xs">
+            <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 shadow-2xs">
               Cancelled
             </span>
           )}
-          {isUnfilled && (
-            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold shadow-2xs">
-              Unfilled
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Progress Map / Service Timeline (Real-app stepper) */}
-      {!isCancelled && !isUnfilled && (
-        <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs mb-3">
-          <div className="relative flex items-center justify-between">
-            {/* Background Connecting Line */}
-            <div className="absolute left-6 right-6 top-4 h-0.5 bg-slate-100 z-0" />
-            <div 
-              className="absolute left-6 top-4 h-0.5 bg-[#1B5E3C] transition-all duration-500 z-0"
-              style={{
-                width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%'
-              }}
-            />
-
-            {/* Step 1: Broadcasted */}
-            <div className="flex flex-col items-center relative z-10">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                currentStep >= 1 
-                  ? 'bg-[#1B5E3C] text-white shadow-xs' 
-                  : 'bg-slate-100 text-slate-400'
-              }`}>
-                {currentStep > 1 ? <CheckCircle2 className="w-4 h-4" /> : <Radio className="w-4 h-4 animate-pulse" />}
-              </div>
-              <span className={`text-[10px] mt-1.5 font-bold tracking-tight ${
-                currentStep === 1 ? 'text-[#1B5E3C]' : 'text-slate-600'
-              }`}>
-                Broadcasted
-              </span>
-            </div>
-
-            {/* Step 2: Worker Matched */}
-            <div className="flex flex-col items-center relative z-10">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                currentStep >= 2 
-                  ? 'bg-[#1B5E3C] text-white shadow-xs' 
-                  : 'bg-white border-2 border-slate-200 text-slate-400'
-              }`}>
-                {currentStep > 2 ? <CheckCircle2 className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-              </div>
-              <span className={`text-[10px] mt-1.5 font-bold tracking-tight ${
-                currentStep === 2 ? 'text-[#1B5E3C]' : currentStep > 2 ? 'text-slate-700' : 'text-slate-400'
-              }`}>
-                Worker Assigned
-              </span>
-            </div>
-
-            {/* Step 3: Work Completed */}
-            <div className="flex flex-col items-center relative z-10">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                currentStep === 3 
-                  ? 'bg-[#1B5E3C] text-white shadow-xs' 
-                  : 'bg-white border-2 border-slate-200 text-slate-400'
-              }`}>
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <span className={`text-[10px] mt-1.5 font-bold tracking-tight ${
-                currentStep === 3 ? 'text-[#1B5E3C]' : 'text-slate-400'
-              }`}>
-                Completed
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Unified Service Card (Consolidated single surface instead of separate cards) */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs overflow-hidden">
-        
-        {/* Section 1: Live Status Spotlight & Interaction (Matched, Completed, Cancelled, Unfilled) */}
-        {!isLooking && (
-          <div className="p-4 sm:p-5 border-b border-slate-100">
-            {/* MATCHED STATE: Worker Spotlight & Direct Contact Button */}
-            {job.status === 'matched' && matchedWorker && (
-            <div className="space-y-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-xl font-black shrink-0 shadow-2xs">
-                  {matchedWorker.initial}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-base font-bold text-slate-900 truncate leading-tight">
-                      {matchedWorker.name}
-                    </h3>
-                    <span title="Verified Worker">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                    <span className="flex items-center gap-0.5 text-amber-700 font-bold">
-                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                      {matchedWorker.rating}
-                    </span>
-                    <span>•</span>
-                    <span>{matchedWorker.distance} km away</span>
-                    <span>•</span>
-                    <span className="text-[#1B5E3C] font-bold">{matchedWorker.wage}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Direct Contact Button (Button instead of exposed raw number) */}
-              <button
-                type="button"
-                onClick={() => callWorker(matchedWorker)}
-                className="w-full py-3 px-4 rounded-2xl bg-[#1B5E3C] hover:bg-[#14472d] text-white font-bold text-xs flex items-center justify-between shadow-xs transition-transform active:scale-98 cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block text-xs font-bold leading-tight">Direct Contact</span>
-                    <span className="text-[11px] text-emerald-100 font-medium block">Tap to call {matchedWorker.name}</span>
-                  </div>
-                </div>
-                <span className="text-xs font-bold bg-white text-[#1B5E3C] px-3 py-1.5 rounded-xl shadow-2xs">
-                  Call Now
-                </span>
-              </button>
-            </div>
-          )}
-
-          {/* COMPLETED STATE: Summary & Ratings */}
-          {job.status === 'completed' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#1B5E3C] shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Service completed successfully
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {matchedWorker ? `Carried out by ${matchedWorker.name}.` : 'Service marked finished.'}
-                  </p>
-                </div>
-              </div>
-
-              {job.rating ? (
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-amber-950">Your rating:</span>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star 
-                          key={star} 
-                          className={`w-3.5 h-3.5 ${star <= job.rating! ? 'fill-amber-500 text-amber-500' : 'text-slate-300'}`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-bold text-amber-800">{job.rating}.0 / 5.0</span>
-                </div>
-              ) : (
-                <button
-                  onClick={() => openRateModal(job.id)}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                >
-                  <Star className="w-3.5 h-3.5 fill-white" />
-                  <span>Rate this service & worker</span>
-                </button>
-              )}
-
-              {/* Add / Toggle Favourite for Completed Worker */}
-              {matchedWorker && (
-                <button
-                  type="button"
-                  onClick={() => toggleFavourite(matchedWorker.id)}
-                  className={`w-full py-2.5 px-3.5 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
-                    favourites.includes(matchedWorker.id)
-                      ? 'bg-rose-50/80 border-rose-200 text-rose-700 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-slate-100/90 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Heart className={`w-4 h-4 transition-transform ${
-                      favourites.includes(matchedWorker.id) ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
-                    }`} />
-                    <span>
-                      {favourites.includes(matchedWorker.id) 
-                        ? `Saved ${matchedWorker.name} in Favourites` 
-                        : `Save ${matchedWorker.name} to Favourites`
-                      }
-                    </span>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    favourites.includes(matchedWorker.id) ? 'bg-rose-100 text-rose-800' : 'bg-slate-200/80 text-slate-600'
-                  }`}>
-                    {favourites.includes(matchedWorker.id) ? 'Saved' : '+ Add'}
-                  </span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* CANCELLED STATE: Context & Real Reschedule Option */}
-          {isCancelled && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
-                  <XCircle className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Request was cancelled
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    This request was closed. You can re-book the service with a fresh date and budget anytime.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => openCreateJobModal(job.category)}
-                className="w-full py-2.5 rounded-xl bg-[#1B5E3C] hover:bg-[#14472d] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-2xs transition-all active:scale-98 cursor-pointer"
-              >
-                <span>Reschedule / Book Again</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* UNFILLED STATE: Timeout & Re-broadcast */}
-          {isUnfilled && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    No worker accepted in time
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Local workers were either occupied or unavailable for this scheduled slot. You can reschedule for another day or adjust expected wages.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => openCreateJobModal(job.category)}
-                className="w-full py-2.5 rounded-xl bg-[#1B5E3C] hover:bg-[#14472d] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-2xs transition-all active:scale-98 cursor-pointer"
-              >
-                <span>Try Rescheduling Request</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          </div>
-        )}
-
-        {/* Section 2: Job Specification Details */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 space-y-3">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Job Details & Requirement
-          </span>
-
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="flex items-center gap-2 text-slate-700 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-              <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-              <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 block font-medium">Date & Time</span>
-                <span className="font-bold text-slate-900 truncate block">{formatDate(job.date)} · {job.time}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-slate-700 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-              <IndianRupee className="w-4 h-4 text-slate-400 shrink-0" />
-              <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 block font-medium">Expected Wage</span>
-                <span className="font-bold text-[#1B5E3C] truncate block">{job.wage}</span>
-              </div>
-            </div>
-
-            <div className="col-span-2 flex items-center gap-2 text-slate-700 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] text-slate-400 block font-medium">Service Location</span>
-                <span className="font-bold text-slate-900 truncate block">{job.location}</span>
-              </div>
-            </div>
-          </div>
-
-          {job.description && (
-            <div className="pt-2 text-xs">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-                Notes / Special Instructions
-              </span>
-              <p className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-slate-700 font-medium leading-relaxed italic">
-                "{job.description}"
-              </p>
-            </div>
-          )}
+      {/* Service Header: Exact Service Image & Title */}
+      <div className="flex items-center gap-3.5 my-3 select-none">
+        <div className="w-13 h-13 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] p-1.5 flex items-center justify-center shrink-0 shadow-2xs">
+          <img 
+            src={getServiceIllustration(job.category)} 
+            alt={job.category} 
+            className="w-full h-full object-contain"
+          />
         </div>
 
-        {/* Section 3: Broadcasted Workers Activity (Collapsible) */}
-        <div className="p-4 sm:p-5">
-          <button
-            type="button"
-            onClick={() => setWorkersListExpanded(!workersListExpanded)}
-            className="w-full flex items-center justify-between text-left cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Requested Workers ({job.requests.length})
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight truncate">
+              {job.category}
+            </h1>
+            {isUrgent && (
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase tracking-wider border border-amber-300">
+                ⚡ Urgent
               </span>
-              <span className="text-[10px] text-slate-400 font-semibold">
-                • {job.requests.filter(r => r.status === 'accepted').length > 0 ? '1 accepted' : 'Waiting for reply'}
-              </span>
-            </div>
-            {workersListExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-          </button>
+            )}
+          </div>
 
-          {workersListExpanded && (
-            <div className="mt-3 divide-y divide-slate-100">
-              {job.requests.map((req) => {
-                const worker = WORKERS_DATABASE.find(w => w.id === req.workerId);
-                if (!worker) return null;
-
-                return (
-                  <div key={req.workerId} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                        {worker.initial}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 truncate">{worker.name}</div>
-                        <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
-                          <span>{worker.rating} · {worker.wage}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      {req.status === 'pending' && (
-                        <span className="inline-flex items-center text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                          Waiting
-                        </span>
-                      )}
-                      {req.status === 'accepted' && (
-                        <span className="inline-flex items-center text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          Accepted
-                        </span>
-                      )}
-                      {req.status === 'inactive' && (
-                        <span className="inline-flex items-center text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                          Paused
-                        </span>
-                      )}
-                      {req.status === 'cancelled' && (
-                        <span className="inline-flex items-center text-[10px] font-medium text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                          Cancelled
-                        </span>
-                      )}
-                      {req.status === 'rejected' && (
-                        <span className="inline-flex items-center text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                          Unavailable
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Request More Workers button directly below the requested workers list (Only for looking jobs) */}
-              {isLooking && (
-                <div className="pt-3">
+          {/* Expiry timer for pending/looking jobs (Urgent: 5m; Scheduled: 3hrs) */}
+          {isLooking && (
+            isUrgent ? (
+              getUrgentJobTimeRemaining(job).isExpired ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-amber-800 font-semibold">5-min window elapsed • No match</span>
                   <button
                     type="button"
-                    onClick={() => navigate(`/workers?jobId=${job.id}`)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200 text-[#185E3B] font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+                    onClick={() => retryUrgentJob(job.id)}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0C6B44] text-white text-[11px] font-bold shadow-2xs hover:bg-[#0A5A39] cursor-pointer"
                   >
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
-                    <span>Request More Workers</span>
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Request Again</span>
                   </button>
                 </div>
-              )}
+              ) : (
+                <div className="flex items-center gap-1 text-xs text-amber-800 font-bold mt-0.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Immediate request • {getUrgentJobTimeRemaining(job).formatted} remaining</span>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-1 text-xs text-amber-700 font-semibold mt-0.5">
+                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>Request valid • 2h 45m left</span>
+              </div>
+            )
+          )}
+          {isMatched && (
+            <div className="flex items-center gap-1 text-xs text-[#0C6B44] font-semibold mt-0.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0C6B44] shrink-0" />
+              <span>Confirmed for scheduled service</span>
+            </div>
+          )}
+          {isCompleted && (
+            <div className="flex items-center gap-1 text-xs text-[#76857D] font-medium mt-0.5">
+              <span>Finished and verified</span>
             </div>
           )}
         </div>
-
       </div>
 
-      {/* Customer Actions */}
-      <div className="space-y-3 mt-4">
-        {job.status === 'matched' && (
+      {/* Collected Requirement Details (Only What Was Filled During Creation) */}
+      <div className="glass rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-white shadow-xs space-y-3 mb-3.5">
+        <span className="text-[11px] font-bold text-[#76857D] uppercase tracking-wider block">
+          Requirement Details
+        </span>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Date & Time */}
+          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
+            <Calendar className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] text-[#76857D] block font-medium">Date & Time</span>
+              <span className="font-bold text-[#16261E] block truncate mt-0.5">
+                {formatDate(job.date)} · {job.time}
+              </span>
+            </div>
+          </div>
+
+          {/* Expected Wage */}
+          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
+            <IndianRupee className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] text-[#76857D] block font-medium">Expected Wage</span>
+              <span className="font-bold text-[#0C6B44] font-display block truncate mt-0.5">
+                {job.wage}
+              </span>
+            </div>
+          </div>
+
+          {/* Service Location */}
+          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] text-[#76857D] block font-medium">Location</span>
+              <span className="font-bold text-[#16261E] block truncate mt-0.5">
+                {job.location}
+              </span>
+            </div>
+          </div>
+
+          {/* Workers Needed */}
+          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
+            <Users className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] text-[#76857D] block font-medium">Workers Needed</span>
+              <span className="font-bold text-[#16261E] block truncate mt-0.5">
+                {job.requests.length || 1} Worker{job.requests.length > 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes / Special Instructions if present */}
+        {job.description && (
+          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0]">
+            <span className="text-[10px] text-[#76857D] block font-bold uppercase tracking-wider mb-0.5">
+              Notes
+            </span>
+            <p className="text-xs text-[#4F6057] font-normal leading-relaxed">
+              "{job.description}"
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Requested Workers List (Consolidated at Bottom with Pure Status & Phone Icon for Matched) */}
+      <div className="glass rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-white shadow-xs space-y-3 mb-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-[#76857D] uppercase tracking-wider block">
+            Requested Workers ({job.requests.length})
+          </span>
+
+          {/* Request Additional Workers: ONLY for scheduled jobs (NOT urgent 5m jobs) */}
+          {!isUrgent && isActive && (
+            <button
+              type="button"
+              onClick={() => {
+                requestMoreWorkers(job.id);
+                navigate('/workers');
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-[#E2F3DD] text-[#0C6B44] border border-[#CBD8CA] text-[11px] font-bold shadow-2xs transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Request Additional Workers</span>
+            </button>
+          )}
+        </div>
+
+        <div className="divide-y divide-[#E3ECE0]">
+          {job.requests.map((req) => {
+            const worker = WORKERS_DATABASE.find(w => w.id === req.workerId);
+            if (!worker) return null;
+
+            const isWorkerMatched = req.status === 'accepted';
+            const isWorkerWaiting = req.status === 'pending';
+            const isWorkerRejected = req.status === 'rejected';
+            const isWorkerCancelled = req.status === 'cancelled';
+
+            return (
+              <div key={req.workerId} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                {/* Worker Avatar & Identity */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {worker.avatar ? (
+                    <img 
+                      src={worker.avatar} 
+                      alt={worker.name} 
+                      className="w-10 h-10 rounded-2xl object-cover border border-[#E3ECE0] shadow-2xs shrink-0" 
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0C6B44] to-[#0A5A39] text-white flex items-center justify-center font-display font-bold text-sm shrink-0">
+                      {worker.initial}
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-display text-sm font-bold text-[#16261E] truncate">
+                      {worker.name}
+                    </h4>
+                    <div className="flex items-center gap-1.5 text-xs text-[#76857D] mt-0.5">
+                      <span className="flex items-center gap-0.5 text-[#16261E] font-bold">
+                        <Star className="w-3 h-3 fill-[#E0A800] text-[#E0A800] stroke-none shrink-0" />
+                        <span>{worker.rating}</span>
+                      </span>
+                      <span>•</span>
+                      <span>{worker.distance} km</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pure Status Badge & Phone Icon ONLY if matched */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {isWorkerMatched && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-[11px] font-bold border border-[#3AAA48]/30">
+                      Matched
+                    </span>
+                  )}
+                  {isWorkerWaiting && (
+                    <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200">
+                      Waiting
+                    </span>
+                  )}
+                  {isWorkerRejected && (
+                    <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-bold border border-slate-200">
+                      Rejected
+                    </span>
+                  )}
+                  {isWorkerCancelled && (
+                    <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-bold border border-slate-200">
+                      Cancelled
+                    </span>
+                  )}
+
+                  {/* ONLY show Phone Icon if worker is matched */}
+                  {isWorkerMatched && (
+                    <button
+                      type="button"
+                      onClick={() => callWorker(worker)}
+                      className="w-8 h-8 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer"
+                      title={`Call ${worker.name}`}
+                    >
+                      <Phone className="w-3.5 h-3.5 fill-current" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Customer Grounded Actions */}
+      <div className="space-y-3">
+        {/* Grounded Button: Mark as Completed (When Matched) */}
+        {isMatched && (
           <button
+            type="button"
             onClick={() => openCompleteConfirmModal(job.id)}
-            className="w-full py-3.5 rounded-2xl bg-[#1B5E3C] hover:bg-[#14472d] text-white font-bold text-sm shadow-md transition-all active:scale-98 cursor-pointer"
+            className="w-full h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-bold text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(10,90,57,0.25)] transition-all active:scale-[0.98] cursor-pointer"
           >
-            Mark service as completed
+            <CheckCircle2 className="w-4 h-4 stroke-[2.2]" />
+            <span>Mark as Completed</span>
           </button>
         )}
 
-        {isActive && (
-          <div className="pt-2 pb-6 flex justify-center">
-            <button
-              type="button"
-              onClick={() => openCancelModal(job.id)}
-              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-rose-50/60 border border-slate-200 hover:border-rose-200 text-rose-600 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <XCircle className="w-4 h-4 text-rose-500" />
-              <span>Cancel this request</span>
-            </button>
+        {/* Rating Button if Completed and Not Rated */}
+        {isCompleted && !job.rating && (
+          <button
+            type="button"
+            onClick={() => openRateModal(job.id)}
+            className="w-full h-12 rounded-full bg-[#E0A800] hover:bg-[#c99700] text-white font-display font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Star className="w-4 h-4 fill-white" />
+            <span>Rate this service & workers</span>
+          </button>
+        )}
+
+        {/* Completed Rating Display */}
+        {isCompleted && job.rating && (
+          <div className="p-3.5 rounded-2xl bg-[#FBF0CF] border border-[#faeab5] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#6F4C00]" />
+              <span className="font-bold text-[#6F4C00]">Your Rating:</span>
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star 
+                    key={star} 
+                    className={`w-3.5 h-3.5 ${star <= job.rating! ? 'fill-[#E0A800] text-[#E0A800]' : 'text-slate-300'}`} 
+                  />
+                ))}
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-[#6F4C00]">{job.rating}.0 / 5.0</span>
           </div>
+        )}
+
+        {/* Slide-to-Cancel slider for active requests (Compact ~260px) */}
+        {isActive && (
+          <SlideToCancel onCancel={handleCancelJob} />
         )}
       </div>
 

@@ -8,18 +8,28 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#edf7f1',
+          50: '#E2F3DD',
           100: '#d7ece0',
           200: '#b4ddc5',
           300: '#86c6a2',
           400: '#53a87c',
-          500: '#2e8c5f',
+          500: '#3AAA48',
           600: '#1e714a',
-          700: '#185e3b', // primary brand green
-          800: '#144c31',
-          900: '#103e28',
-          950: '#082316',
+          700: '#13824F',
+          800: '#0C6B44', // primary CTA green
+          900: '#0A5A39', // deep forest green
+          950: '#063E27',
         },
+        lime: {
+          DEFAULT: '#A5D63B',
+          light: '#C4EC5B',
+        },
+        ink: {
+          DEFAULT: '#16261E',
+          2: '#4F6057',
+          muted: '#76857D',
+        },
+        line: '#E3ECE0',
         saffron: {
           50: '#fff9ed',
           100: '#fff1d4',
@@ -42,13 +52,17 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"Noto Sans Devanagari"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Outfit"', '"Noto Sans Devanagari"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'card': '0 2px 12px rgba(24, 94, 59, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
-        'card-hover': '0 12px 28px rgba(24, 94, 59, 0.1), 0 4px 10px rgba(0, 0, 0, 0.04)',
-        'sheet': '0 -10px 40px rgba(15, 45, 30, 0.16)',
-        'nav': '0 -2px 16px rgba(0, 0, 0, 0.05)',
+        'card': '0 6px 20px rgba(16, 60, 38, 0.07), 0 1px 2px rgba(16, 40, 25, 0.05)',
+        'card-hover': '0 12px 28px rgba(16, 60, 38, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04)',
+        'sheet': '0 -10px 40px rgba(10, 60, 35, 0.2)',
+        'nav': '0 10px 30px rgba(16, 60, 38, 0.12), 0 2px 6px rgba(16, 40, 25, 0.06)',
+      },
+      spacing: {
+        '22': '5.5rem',
       }
     },
   },

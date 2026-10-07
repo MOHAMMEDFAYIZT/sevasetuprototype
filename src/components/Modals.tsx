@@ -43,7 +43,7 @@ export const Modals: React.FC = () => {
     <>
       {/* 1. Location Picker Modal */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-0 sm:p-4">
+        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-0 sm:p-4">
           <div 
             className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl animate-slide-up max-h-[85vh] flex flex-col"
             onClick={e => e.stopPropagation()}
@@ -98,7 +98,7 @@ export const Modals: React.FC = () => {
 
       {/* 2. Confirm Multi-Request Modal */}
       {isConfirmModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
           <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl flex flex-col">
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
             
@@ -127,7 +127,7 @@ export const Modals: React.FC = () => {
 
       {/* 3. Cancel Job Modal */}
       {isCancelModalOpen && cancelTargetJobId && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
           <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl flex flex-col">
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
             
@@ -160,7 +160,7 @@ export const Modals: React.FC = () => {
 
       {/* 4. Rate Worker Modal */}
       {isRateModalOpen && rateTargetJobId && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
           <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl flex flex-col text-center">
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
             

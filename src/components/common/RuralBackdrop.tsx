@@ -14,7 +14,11 @@ export const RuralBackdrop: React.FC<RuralBackdropProps> = ({
       <img 
         src={showPeople ? '/images/splash_people.png' : '/images/rural_bg.png'} 
         alt="Rural Landscape" 
-        className="w-full h-auto object-cover object-bottom block"
+        className="w-full h-auto object-cover object-bottom block mix-blend-multiply opacity-80"
+        style={{
+          maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)'
+        }}
         loading="eager"
       />
     </div>

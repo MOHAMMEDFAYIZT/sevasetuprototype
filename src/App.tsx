@@ -16,6 +16,9 @@ import { JobDetailsPage } from './pages/JobDetailsPage';
 import { MyJobsPage } from './pages/MyJobsPage';
 import { FavouritesPage } from './pages/FavouritesPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PastJobsPage } from './pages/PastJobsPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { SelectLocationPage } from './pages/SelectLocationPage';
 
 export function App() {
   return (
@@ -38,6 +41,9 @@ export function App() {
             <Route path="/jobs/:id" element={<JobDetailsPage />} />
             <Route path="/favourites" element={<FavouritesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/past-jobs" element={<PastJobsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/addresses" element={<SelectLocationPage />} />
           </Route>
 
           {/* Fallback */}

@@ -6,12 +6,12 @@ import type { Worker } from '../types';
 import { 
   Heart, 
   Star, 
+  MapPin, 
+  ChevronRight, 
   ArrowRight,
-  ShieldCheck,
-  IndianRupee,
-  Calendar,
+  Send,
   X,
-  Check
+  Wrench
 } from 'lucide-react';
 
 export const FavouritesPage: React.FC = () => {
@@ -19,104 +19,97 @@ export const FavouritesPage: React.FC = () => {
     favourites, 
     toggleFavourite, 
     requestFavouriteDirectly,
+    openWorkerProfile,
     showToast 
   } = useApp();
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
-  const [skillChoiceWorker, setSkillChoiceWorker] = useState<Worker | null>(null);
-  const [selectedSkill, setSelectedSkill] = useState<string>('');
+  const [serviceSelectionWorker, setServiceSelectionWorker] = useState<Worker | null>(null);
 
   const favWorkers = WORKERS_DATABASE.filter(w => favourites.includes(w.id));
 
-  // Extract unique trade categories present across all saved workers (primary or secondary trades)
-  const categoriesInFav = Array.from(
-    new Set(favWorkers.flatMap(w => (w.skills && w.skills.length > 0 ? w.skills : [w.category])))
+  // Extract unique trade categories across saved workers (including secondary skills)
+  const allSavedCategories = Array.from(
+    new Set(favWorkers.flatMap(w => w.skills && w.skills.length > 0 ? w.skills : [w.category]))
   );
 
-  // Filtered workers based on active category tab (matches either primary category or secondary trades)
+  // Filter workers based on selected tab
   const displayedWorkers = selectedCategoryFilter === 'all'
     ? favWorkers
-    : favWorkers.filter(w => 
-        w.category.toLowerCase() === selectedCategoryFilter.toLowerCase() ||
-        (w.skills && w.skills.some(s => s.toLowerCase() === selectedCategoryFilter.toLowerCase()))
-      );
+    : favWorkers.filter(w => {
+        const skills = w.skills && w.skills.length > 0 ? w.skills : [w.category];
+        return skills.some(s => s.toLowerCase() === selectedCategoryFilter.toLowerCase());
+      });
 
-  // Handle booking:
-  // If in a category tab (e.g. Electrician or Plumber), no need to ask which trade it is!
-  // If in 'All' tab, and worker has multiple trades (e.g. Rajesh does Electrician & Plumber), ask which trade.
-  const handleBookWorker = (worker: Worker) => {
+  const handleInitiateRequest = (e: React.MouseEvent, worker: Worker) => {
+    e.stopPropagation();
+
+    // If currently filtered by a specific category (not 'all'), directly use that category
     if (selectedCategoryFilter !== 'all') {
-      // In specific category tab - no need to ask which trade!
       requestFavouriteDirectly(worker.id, selectedCategoryFilter);
+      return;
+    }
+
+    const availableSkills = worker.skills && worker.skills.length > 0 
+      ? worker.skills 
+      : [worker.category];
+
+    // If worker offers multiple services, prompt user with centered modal
+    if (availableSkills.length > 1) {
+      setServiceSelectionWorker(worker);
     } else {
-      // In 'All' tab:
-      if (worker.skills && worker.skills.length > 1) {
-        setSkillChoiceWorker(worker);
-        setSelectedSkill(worker.skills[0]);
-      } else {
-        const trade = (worker.skills && worker.skills.length === 1) ? worker.skills[0] : worker.category;
-        requestFavouriteDirectly(worker.id, trade);
-      }
+      requestFavouriteDirectly(worker.id, availableSkills[0]);
     }
   };
 
-  const handleConfirmSkillAndOpenForm = () => {
-    if (!skillChoiceWorker) return;
-    const worker = skillChoiceWorker;
-    const trade = selectedSkill || (worker.skills ? worker.skills[0] : worker.category);
-
-    setSkillChoiceWorker(null);
-    requestFavouriteDirectly(worker.id, trade);
+  const handleSelectServiceAndProceed = (serviceName: string) => {
+    if (!serviceSelectionWorker) return;
+    const workerId = serviceSelectionWorker.id;
+    setServiceSelectionWorker(null);
+    requestFavouriteDirectly(workerId, serviceName);
   };
 
-  const handleRemoveFavourite = (workerId: number, workerName: string) => {
+  const handleRemoveFavourite = (e: React.MouseEvent, workerId: number, workerName: string) => {
+    e.stopPropagation();
     toggleFavourite(workerId);
     showToast(`${workerName} removed from favourites.`);
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-[#F4F7F5] px-4 sm:px-5 pt-3.5 pb-32 min-h-[calc(100vh-64px)]">
+    <div className="w-full flex-1 flex flex-col px-4 sm:px-5 pt-3 pb-24">
       
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-3.5 select-none">
+      {/* Page Header (Starts mt-22 from top, same as workers list & other pages) */}
+      <div className="flex items-center justify-between mt-22 mb-3.5 select-none">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
             Favourites
           </h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Your saved workers & fast 1-tap direct request
+          <p className="text-xs text-[#4F6057] font-medium mt-0.5">
+            Quickly book your saved verified workers
           </p>
         </div>
-        <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-[#1B5E3C] border border-emerald-200/80 text-[11px] font-bold shadow-2xs">
-          {favWorkers.length} Saved
-        </span>
       </div>
 
-      {/* Category Filter Pills (When favourites exist) */}
-      {favWorkers.length > 0 && categoriesInFav.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-none select-none">
+      {/* Category Filter Pills (All, Electrician, Plumber, etc.) */}
+      {favWorkers.length > 0 && allSavedCategories.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3.5 scrollbar-none select-none">
           <button
             type="button"
             onClick={() => setSelectedCategoryFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
               selectedCategoryFilter === 'all'
-                ? 'bg-[#1B5E3C] text-white shadow-2xs'
-                : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80'
+                ? 'bg-[#0C6B44] text-white shadow-2xs font-bold'
+                : 'bg-white text-[#4F6057] hover:text-[#16261E] border border-[#E3ECE0]'
             }`}
           >
-            <span>All</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-              selectedCategoryFilter === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-            }`}>
-              {favWorkers.length}
-            </span>
+            <span>All ({favWorkers.length})</span>
           </button>
 
-          {categoriesInFav.map(cat => {
-            const count = favWorkers.filter(w => 
-              w.category.toLowerCase() === cat.toLowerCase() ||
-              (w.skills && w.skills.some(s => s.toLowerCase() === cat.toLowerCase()))
-            ).length;
+          {allSavedCategories.map(cat => {
+            const count = favWorkers.filter(w => {
+              const skills = w.skills && w.skills.length > 0 ? w.skills : [w.category];
+              return skills.some(s => s.toLowerCase() === cat.toLowerCase());
+            }).length;
             const isSelected = selectedCategoryFilter.toLowerCase() === cat.toLowerCase();
 
             return (
@@ -124,18 +117,13 @@ export const FavouritesPage: React.FC = () => {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategoryFilter(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
                   isSelected
-                    ? 'bg-[#1B5E3C] text-white shadow-2xs'
-                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80'
+                    ? 'bg-[#0C6B44] text-white shadow-2xs font-bold'
+                    : 'bg-white text-[#4F6057] hover:text-[#16261E] border border-[#E3ECE0]'
                 }`}
               >
-                <span>{cat}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {count}
-                </span>
+                <span>{cat} ({count})</span>
               </button>
             );
           })}
@@ -144,210 +132,221 @@ export const FavouritesPage: React.FC = () => {
 
       {/* Saved Workers List */}
       {favWorkers.length === 0 ? (
-        <div className="p-8 text-center bg-white rounded-[24px] border border-slate-200/90 shadow-2xs my-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+        <div className="p-8 text-center glass rounded-[28px] border border-white my-4 shadow-2xs">
+          <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mx-auto mb-3 shadow-2xs">
             <Heart className="w-7 h-7 fill-rose-500 text-rose-500" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 mb-1">No saved workers yet</h3>
-          <p className="text-xs text-slate-500 mb-5 leading-relaxed max-w-xs mx-auto">
-            Tap the heart icon on any worker card to save them here for quick direct requests anytime.
+          <h3 className="font-display text-base font-bold text-[#16261E] mb-1">No favourites saved yet</h3>
+          <p className="text-xs text-[#4F6057] mb-5 leading-relaxed max-w-xs mx-auto">
+            Tap the heart icon on any worker to save them here for instant booking whenever you need work done.
           </p>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1B5E3C] hover:bg-[#14472d] text-white text-xs font-bold transition-all shadow-md active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-xs font-bold transition-all shadow-md active:scale-95"
           >
             <span>Explore Services</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       ) : displayedWorkers.length === 0 ? (
-        <div className="p-8 text-center bg-white rounded-[24px] border border-slate-200/90 shadow-2xs my-4">
-          <h3 className="text-sm font-bold text-slate-800 mb-1">No {selectedCategoryFilter} workers saved</h3>
-          <p className="text-xs text-slate-500 mb-3">You don't have any saved workers under this specific category.</p>
+        <div className="p-8 text-center glass rounded-[28px] border border-white my-4 shadow-2xs">
+          <h3 className="font-display text-sm font-bold text-[#16261E] mb-1">No {selectedCategoryFilter} workers saved</h3>
+          <p className="text-xs text-[#4F6057] mb-3">You don't have any saved workers offering {selectedCategoryFilter}.</p>
           <button
             type="button"
             onClick={() => setSelectedCategoryFilter('all')}
-            className="text-xs font-bold text-[#1B5E3C] underline cursor-pointer"
+            className="text-xs font-bold text-[#0C6B44] underline cursor-pointer"
           >
-            View all favourites
+            View all saved
           </button>
         </div>
       ) : (
-        <div className="space-y-3.5">
-          {displayedWorkers.map((worker) => (
-            <div
-              key={worker.id}
-              className="rounded-[22px] bg-white border border-slate-200/90 p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06),0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_rgba(20,80,50,0.09)] transition-all space-y-3"
-            >
-              {/* Top Row: Avatar, Name, Category & Heart Toggle */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-900 text-lg font-black shrink-0 shadow-2xs">
-                    {worker.initial}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <h2 className="text-base font-bold text-slate-900 truncate leading-tight">
-                        {worker.name}
-                      </h2>
-                      <span title="Verified Worker">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      </span>
+        <div className="space-y-3">
+          {displayedWorkers.map((worker) => {
+            const skillsList = worker.skills && worker.skills.length > 0 
+              ? worker.skills 
+              : [worker.category];
+
+            return (
+              <div
+                key={worker.id}
+                onClick={() => openWorkerProfile(worker, 'favourites')}
+                className="glass rounded-2xl sm:rounded-3xl border border-white hover:border-[#3AAA48]/40 shadow-[0_6px_20px_rgba(16,60,38,0.06),0_1px_2px_rgba(16,40,25,0.04)] overflow-hidden transition-all duration-200 cursor-pointer"
+              >
+                {/* Top Floor: Profile Information (Identical to Workers List) */}
+                <div className="p-3.5 sm:p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      {/* Squared-Circle Avatar with Active Status Dot */}
+                      <div className="relative shrink-0">
+                        {worker.avatar ? (
+                          <img
+                            src={worker.avatar}
+                            alt={worker.name}
+                            className="w-13 h-13 rounded-2xl object-cover border border-[#E3ECE0] shadow-2xs"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#0C6B44] to-[#0A5A39] text-white flex items-center justify-center font-display font-bold text-lg shadow-2xs border border-white/20">
+                            {worker.initial}
+                          </div>
+                        )}
+                        <span 
+                          className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-2xs" 
+                          title="Available now" 
+                        />
+                      </div>
+
+                      {/* Worker Name, Rating & Distance */}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display text-[15px] font-bold text-[#16261E] leading-snug truncate">
+                          {worker.name}
+                        </h3>
+
+                        {/* Single clean line: Rating · Distance */}
+                        <div className="flex items-center gap-1.5 text-xs text-[#4F6057] mt-0.5 font-medium">
+                          <span className="flex items-center gap-1 text-[#16261E] font-bold">
+                            <Star className="w-3.5 h-3.5 fill-[#E0A800] text-[#E0A800] stroke-none shrink-0" />
+                            <span>{worker.rating}</span>
+                          </span>
+                          <span className="text-[#CBD8CA]">•</span>
+                          <span className="flex items-center gap-1 text-[#76857D]">
+                            <MapPin className="w-3.5 h-3.5 text-[#76857D] shrink-0" />
+                            <span>{worker.distance} km away</span>
+                          </span>
+                        </div>
+
+                        {/* Clean View Profile action */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openWorkerProfile(worker, 'favourites');
+                          }}
+                          className="text-xs font-bold text-[#0C6B44] hover:underline flex items-center gap-0.5 mt-1 cursor-pointer"
+                        >
+                          <span>View Profile</span>
+                          <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#1B5E3C] border border-emerald-200/80 text-[10px] font-bold">
-                        {worker.category}
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        • Verified Trade
-                      </span>
+
+                    {/* Top Right: Favourite Heart */}
+                    <div className="flex items-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveFavourite(e, worker.id, worker.name)}
+                        className="p-1 text-rose-500 hover:scale-110 transition-transform cursor-pointer"
+                        title="Remove from favourites"
+                      >
+                        <Heart className="w-5 h-5 fill-rose-500 text-rose-500 stroke-[1.8]" />
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Remove from Favourites Heart */}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFavourite(worker.id, worker.name)}
-                  className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shadow-2xs cursor-pointer shrink-0"
-                  title="Remove from favourites"
-                >
-                  <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                </button>
-              </div>
-
-              {/* Rate & Rating Info Strip (NO distance / place) */}
-              <div className="flex items-center justify-between text-xs bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 font-medium">
-                <div className="flex items-center gap-1.5 text-slate-700">
-                  <div className="flex items-center gap-1 text-amber-700 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span>{worker.rating}</span>
+                {/* Bottom Shelf: Services on the left, Request button on the right */}
+                <div className="px-3.5 py-2.5 border-t border-[#E3ECE0] bg-[#F6FAF4] flex items-center justify-between gap-3 select-none">
+                  {/* Left: Services Pills */}
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    {skillsList.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold truncate select-none"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
-                  {worker.reviewsCount && (
-                    <span className="text-[11px] text-slate-500">
-                      ({worker.reviewsCount} reviews)
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 font-bold text-[#1B5E3C]">
-                  <IndianRupee className="w-3.5 h-3.5" />
-                  <span>{worker.wage}</span>
-                </div>
-              </div>
 
-              {/* Platform Service Categories (e.g. Electrician, Plumber) */}
-              {worker.skills && worker.skills.length > 1 && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">
-                    Services:
-                  </span>
-                  {worker.skills.map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[#1B5E3C] text-[11px] font-bold"
+                  {/* Right: Compact Tactile Request Button */}
+                  <div className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => handleInitiateRequest(e, worker)}
+                      className="h-8 px-4 rounded-full font-display font-bold text-xs bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(10,90,57,0.2)] transition-all active:scale-95 cursor-pointer"
                     >
-                      {skill}
-                    </span>
-                  ))}
+                      <Send className="w-3 h-3 stroke-[2.2]" />
+                      <span>Request</span>
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Action Button: Book Worker (Opens normal job form for him only) */}
-              <div className="pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => handleBookWorker(worker)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#1B5E3C] hover:bg-[#14472d] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs transition-transform active:scale-98 cursor-pointer"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Book {worker.name.split(' ')[0]}</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-                </button>
               </div>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* OPTION 3: Trade Choice Modal (Shown when requesting a worker with multiple trades) */}
-      {skillChoiceWorker && (
+      {/* Centered Modal: Choose Service (When requesting multi-trade worker from 'All') */}
+      {serviceSelectionWorker && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4 animate-fade-in"
-          onClick={() => setSkillChoiceWorker(null)}
+          className="absolute inset-0 z-60 flex items-center justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[4px] p-4 animate-fade-in"
+          onClick={() => setServiceSelectionWorker(null)}
         >
           <div 
-            className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl animate-slide-up flex flex-col max-h-[90vh]"
-            onClick={e => e.stopPropagation()}
+            className="w-[calc(100%-32px)] max-w-[340px] bg-white rounded-[24px] p-5 shadow-[0_20px_50px_rgba(10,40,25,0.3)] border border-[#E3ECE0] animate-scale-in flex flex-col"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100 mb-3">
-              <div>
-                <span className="text-[10px] font-bold text-[#1B5E3C] uppercase tracking-wider block">
-                  Select Specific Trade
-                </span>
-                <h2 className="text-base font-bold text-slate-900 leading-tight">
-                  Book {skillChoiceWorker.name}
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {skillChoiceWorker.name} provides multiple trades. Which work do you require?
-                </p>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#E3ECE0]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-display text-sm font-bold text-[#16261E]">
+                    Select Service
+                  </h3>
+                  <p className="text-[11px] text-[#76857D]">
+                    for {serviceSelectionWorker.name}
+                  </p>
+                </div>
               </div>
+
               <button
                 type="button"
-                onClick={() => setSkillChoiceWorker(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+                onClick={() => setServiceSelectionWorker(null)}
+                className="w-7 h-7 rounded-full bg-[#F6FAF4] hover:bg-[#E2F3DD] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* List of Skills as selectable radio options */}
-            <div className="space-y-2 py-2 overflow-y-auto max-h-64">
-              {skillChoiceWorker.skills?.map((skill, index) => {
-                const isSelected = selectedSkill === skill;
+            {/* Prompt description */}
+            <p className="text-xs text-[#4F6057] mt-3 mb-2.5 font-normal">
+              {serviceSelectionWorker.name} offers multiple services. Which work do you need assistance with?
+            </p>
+
+            {/* Service Options List */}
+            <div className="space-y-2 py-1">
+              {(serviceSelectionWorker.skills || [serviceSelectionWorker.category]).map((skill) => {
+                const wageInfo = serviceSelectionWorker.serviceWages?.[skill] || {
+                  hourly: serviceSelectionWorker.wage,
+                  daily: serviceSelectionWorker.dailyWage || '₹850/day'
+                };
+
                 return (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedSkill(skill)}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? 'border-[#1B5E3C] bg-emerald-50/70 shadow-2xs'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => handleSelectServiceAndProceed(skill)}
+                    className="w-full p-3 rounded-2xl border border-[#E3ECE0] hover:border-[#0C6B44] bg-[#F6FAF4] hover:bg-[#E2F3DD]/40 flex items-center justify-between transition-all cursor-pointer text-left group"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        isSelected ? 'border-[#1B5E3C] bg-[#1B5E3C] text-white' : 'border-slate-300'
-                      }`}>
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-slate-900 block">{skill}</span>
-                        <span className="text-[10px] text-slate-500 font-medium">Standard rate: {skillChoiceWorker.wage}</span>
-                      </div>
+                    <div>
+                      <span className="font-display text-sm font-bold text-[#16261E] group-hover:text-[#0C6B44] block">
+                        {skill}
+                      </span>
+                      <span className="text-[11px] text-[#4F6057] mt-0.5 block font-medium">
+                        {wageInfo.hourly} • {wageInfo.daily}
+                      </span>
                     </div>
 
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {skill}
-                    </span>
-                  </div>
+                    <div className="w-7 h-7 rounded-full bg-white group-hover:bg-[#0C6B44] text-[#76857D] group-hover:text-white border border-[#E3ECE0] flex items-center justify-center transition-colors">
+                      <ChevronRight className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                  </button>
                 );
               })}
-            </div>
-
-            {/* Confirmation CTA */}
-            <div className="pt-3 border-t border-slate-100 mt-2">
-              <button
-                type="button"
-                onClick={handleConfirmSkillAndOpenForm}
-                className="w-full py-3 rounded-xl bg-[#1B5E3C] hover:bg-[#14472d] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
-              >
-                <span>Continue with {selectedSkill}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -356,4 +355,3 @@ export const FavouritesPage: React.FC = () => {
     </div>
   );
 };
-
