@@ -274,8 +274,6 @@ export const HomePage: React.FC = () => {
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={() => {
               setIsSearchFocused(true);
-              (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = searchInputRef.current;
-              openKeyboard();
             }}
             onClick={() => {
               (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = searchInputRef.current;
@@ -347,8 +345,8 @@ export const HomePage: React.FC = () => {
                   className="group flex flex-col cursor-pointer active:scale-[0.98] transition-transform select-none"
                   title={`Request ${service.name}`}
                 >
-                  {/* Journey Planner Illustration Card Tile (Clean subtle border for background separation, static on hover) */}
-                  <div className="w-full aspect-[16/11] rounded-[20px] sm:rounded-[22px] overflow-hidden bg-white border-[1.5px] border-[#E3ECE0] shadow-[0_3px_12px_rgba(16,60,38,0.06)] transition-all">
+                  {/* Journey Planner Illustration Card Tile (Seamless edge matching card without visible separate border) */}
+                  <div className="w-full aspect-[16/11] rounded-[20px] sm:rounded-[22px] overflow-hidden bg-white border border-black/[0.04] shadow-[0_3px_12px_rgba(16,60,38,0.06)] transition-all">
                     <img 
                       src={imgPath} 
                       alt={service.name} 

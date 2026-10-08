@@ -52,6 +52,8 @@ export interface Job {
   time: string;
   location: string;
   description: string;
+  hasVoiceNote?: boolean;
+  voiceNoteDuration?: string;
   wage: string;
   status: JobStatus;
   requests: WorkerRequest[];

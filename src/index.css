@@ -311,7 +311,7 @@ h4 { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink
 
 @keyframes toastIn {
   0% {
-    transform: translateY(-14px) scale(0.96);
+    transform: translateY(12px) scale(0.96);
     opacity: 0;
   }
   100% {

@@ -305,7 +305,7 @@ export const Modals: React.FC = () => {
                 id="rating-feedback"
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
-                onFocus={openKeyboard}
+                onClick={openKeyboard}
                 placeholder="Share any comments or notes about the service..."
                 rows={2}
                 className="w-full p-3 rounded-2xl bg-white border border-[#E3ECE0] focus:border-[#3AAA48] focus:ring-2 focus:ring-[#3AAA48]/20 focus:outline-none text-xs text-[#16261E] placeholder:text-[#76857D] resize-none transition-all leading-relaxed"

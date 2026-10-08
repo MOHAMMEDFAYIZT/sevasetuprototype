@@ -44,17 +44,17 @@ export const Toast: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-22 sm:bottom-24 left-0 right-0 z-[70] flex justify-center px-4 pointer-events-none transition-all">
-      <div className="w-full max-w-[390px] flex justify-center">
+    <div className="fixed bottom-[210px] sm:bottom-[215px] left-0 right-0 z-[70] flex justify-center px-4 pointer-events-none transition-all">
+      <div className="w-full max-w-[380px] flex justify-center">
         <div
           onClick={hideToast}
           role="status"
           aria-live="polite"
-          className={`pointer-events-auto cursor-pointer animate-toast-in bg-[#0A5A39] text-white backdrop-blur-md border ${borderColor} ${glowColor} px-4 py-2.5 rounded-full flex items-center gap-2.5 max-w-full select-none active:scale-95 transition-all shadow-2xl`}
+          className={`pointer-events-auto cursor-pointer animate-toast-in bg-[#0A5A39]/95 text-white backdrop-blur-md border ${borderColor} ${glowColor} px-4 py-2.5 rounded-2xl flex items-center gap-2.5 max-w-full select-none active:scale-95 transition-all shadow-xl`}
           title="Click to dismiss"
         >
           <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
-          <span className="text-xs sm:text-[13.5px] font-semibold tracking-tight text-white leading-tight">
+          <span className="text-xs sm:text-[13.5px] font-medium tracking-tight text-white leading-tight">
             {toast}
           </span>
           <button

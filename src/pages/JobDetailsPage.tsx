@@ -9,15 +9,15 @@ import {
   MapPin, 
   Calendar, 
   CheckCircle2, 
-  Star, 
-  IndianRupee,
-  Users,
-  Clock,
-  ChevronRight,
-  Sparkles,
-  Plus,
-  Zap,
-  RotateCcw
+  Clock, 
+  Sparkles, 
+  Plus, 
+  Zap, 
+  Play,
+  Pause,
+  Volume2,
+  Star,
+  ChevronRight
 } from 'lucide-react';
 
 // Exact service illustrations used across HomePage and MyJobs
@@ -119,7 +119,6 @@ export const JobDetailsPage: React.FC = () => {
     openCompleteConfirmModal, 
     openRateModal,
     requestMoreWorkers,
-    retryUrgentJob,
     showToast
   } = useApp();
 
@@ -161,6 +160,17 @@ export const JobDetailsPage: React.FC = () => {
   const isCancelled = job.status === 'cancelled';
   const isActive = isLooking || isMatched;
 
+  // Voice note play state
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const togglePlayVoice = () => {
+    if (!isPlayingVoice) {
+      setIsPlayingVoice(true);
+      setTimeout(() => setIsPlayingVoice(false), 5000);
+    } else {
+      setIsPlayingVoice(false);
+    }
+  };
+
   // Format date nicely
   const formatDate = (dateStr: string) => {
     try {
@@ -177,22 +187,39 @@ export const JobDetailsPage: React.FC = () => {
     showToast('Job request cancelled');
   };
 
-  return (
-    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
-      
-      {/* Top Bar: Back Button & Status Badge (Clean, No Job ID) */}
-      <div className="mt-22 flex items-center justify-between gap-3 mb-2 select-none">
-        <button
-          type="button"
-          onClick={() => navigate('/jobs')}
-          className="w-9 h-9 rounded-full bg-white hover:bg-[#E2F3DD] border border-[#CBD8CA] flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-colors shadow-2xs cursor-pointer active:scale-95"
-          title="Back to My Jobs"
-        >
-          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-        </button>
+  const todayStr = new Date().toISOString().split('T')[0];
 
-        {/* Real-time Status Badge */}
-        <div>
+  return (
+    <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-36 sm:pb-40 min-h-full relative">
+      {/* Back button at the top - Always navigates back to My Jobs page */}
+      <button
+        type="button"
+        onClick={() => navigate('/jobs')}
+        className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
+        title="Back to My Jobs"
+        aria-label="Back to My Jobs"
+      >
+        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+      </button>
+
+      {/* Top Centered Service Icon, Name & Live Status Badge */}
+      <div className="mt-14 mb-4 flex flex-col items-center text-center select-none">
+        {/* Centered Service Image */}
+        <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl bg-[#FEF6EE] border border-[#F3E5D8] p-2 flex items-center justify-center shadow-sm mb-2.5">
+          <img 
+            src={getServiceIllustration(job.category)} 
+            alt={job.category} 
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {/* Centered Service Name */}
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
+          {job.category} Service
+        </h1>
+
+        {/* Real-time Status Badge Centered */}
+        <div className="mt-2">
           {isLooking && (
             isUrgent && getUrgentJobTimeRemaining(job).isExpired ? (
               <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1.5 shadow-2xs">
@@ -212,14 +239,14 @@ export const JobDetailsPage: React.FC = () => {
             )
           )}
           {isMatched && (
-            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#3AAA48]/30 flex items-center gap-1 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#3AAA48]/30 flex items-center gap-1.5 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0C6B44]" />
               <span>Worker Matched</span>
             </span>
           )}
           {isCompleted && (
-            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#CBD8CA] flex items-center gap-1 shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="px-3 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-xs font-bold border border-[#CBD8CA] flex items-center gap-1.5 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0C6B44]" />
               <span>Completed</span>
             </span>
           )}
@@ -231,156 +258,95 @@ export const JobDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Service Header: Exact Service Image & Title */}
-      <div className="flex items-center gap-3.5 my-3 select-none">
-        <div className="w-13 h-13 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] p-1.5 flex items-center justify-center shrink-0 shadow-2xs">
-          <img 
-            src={getServiceIllustration(job.category)} 
-            alt={job.category} 
-            className="w-full h-full object-contain"
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight truncate">
-              {job.category}
-            </h1>
-            {isUrgent && isLooking && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase tracking-wider border border-amber-300">
-                ⚡ Today's Work
-              </span>
-            )}
-          </div>
-
-          {/* Status timer row for pending/looking jobs */}
-          {isLooking && (
-            isUrgent ? (
-              getUrgentJobTimeRemaining(job).isExpired ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-amber-800 font-semibold">No worker available right now</span>
-                  <button
-                    type="button"
-                    onClick={() => retryUrgentJob(job.id)}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0C6B44] text-white text-[11px] font-bold shadow-2xs hover:bg-[#0A5A39] cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Request Again</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-xs text-amber-800 font-bold mt-0.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>Looking for nearby available workers • {getUrgentJobTimeRemaining(job).formatted}</span>
-                </div>
-              )
-            ) : (
-              <div className="flex items-center gap-1 text-xs text-amber-700 font-semibold mt-0.5">
-                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>Request sent • 2h 45m left</span>
-              </div>
-            )
-          )}
-          {isMatched && (
-            <div className="flex items-center gap-1 text-xs text-[#0C6B44] font-semibold mt-0.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#0C6B44] shrink-0" />
-              <span>Confirmed for scheduled service</span>
-            </div>
-          )}
-          {isCompleted && (
-            <div className="flex items-center gap-1 text-xs text-[#76857D] font-medium mt-0.5">
-              <span>Finished and verified</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Collected Requirement Details (Only What Was Filled During Creation) */}
+      {/* Uncluttered Job Details Card */}
       <div className="glass rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-white shadow-xs space-y-3 mb-3.5">
         <span className="text-[11px] font-bold text-[#76857D] uppercase tracking-wider block">
-          Requirement Details
+          Job Details
         </span>
 
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {/* Date & Time */}
-          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
-            <Calendar className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] text-[#76857D] block font-medium">Date & Time</span>
-              <span className="font-bold text-[#16261E] block truncate mt-0.5">
-                {formatDate(job.date)} · {job.time}
-              </span>
+        <div className="divide-y divide-[#E3ECE0]">
+          {/* Service Date & Time */}
+          <div className="py-2.5 first:pt-0 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-[#4F6057] font-medium">
+              <div className="w-8 h-8 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
+                <Calendar className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <div>
+                <span className="text-[10px] text-[#76857D] block font-medium">Service Date & Time</span>
+                <span className="font-bold text-[#16261E] block text-xs mt-0.5">
+                  {formatDate(job.date)} • {job.time}
+                </span>
+              </div>
             </div>
-          </div>
-
-          {/* Expected Wage */}
-          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
-            <IndianRupee className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] text-[#76857D] block font-medium">Expected Wage</span>
-              <span className="font-bold text-[#0C6B44] font-display block truncate mt-0.5">
-                {job.wage}
-              </span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F6FAF4] border border-[#CBD8CA] text-[10px] font-bold text-[#0C6B44]">
+              {job.date === todayStr ? 'Today' : 'Scheduled'}
+            </span>
           </div>
 
           {/* Service Location */}
-          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
-            <MapPin className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] text-[#76857D] block font-medium">Location</span>
-              <span className="font-bold text-[#16261E] block truncate mt-0.5">
-                {job.location}
-              </span>
-            </div>
-          </div>
-
-          {/* Workers Needed */}
-          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-start gap-2">
-            <Users className="w-4 h-4 text-[#0C6B44] shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] text-[#76857D] block font-medium">Workers Needed</span>
-              <span className="font-bold text-[#16261E] block truncate mt-0.5">
-                {job.requests.length || 1} Worker{job.requests.length > 1 ? 's' : ''}
-              </span>
+          <div className="py-2.5 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-[#4F6057] font-medium min-w-0 flex-1">
+              <div className="w-8 h-8 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] text-[#76857D] block font-medium">Service Location</span>
+                <span className="font-bold text-[#16261E] block text-xs mt-0.5 truncate">
+                  {job.location}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Notes / Special Instructions if present */}
+        {/* Job Requirement Text Notes */}
         {job.description && (
-          <div className="p-2.5 rounded-xl bg-[#F6FAF4] border border-[#E3ECE0]">
-            <span className="text-[10px] text-[#76857D] block font-bold uppercase tracking-wider mb-0.5">
-              Notes
+          <div className="p-3 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0]">
+            <span className="text-[10px] text-[#76857D] block font-bold uppercase tracking-wider mb-1">
+              Job Requirements
             </span>
-            <p className="text-xs text-[#4F6057] font-normal leading-relaxed">
+            <p className="text-xs text-[#16261E] font-medium leading-relaxed italic">
               "{job.description}"
             </p>
           </div>
         )}
+
+        {/* Voice Note Audio Preview (if present) */}
+        {(job.hasVoiceNote || job.voiceNoteDuration) && (
+          <div className="p-2.5 rounded-2xl bg-[#F6FAF4] border border-[#CBD8CA] flex items-center justify-between gap-2.5 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                type="button"
+                onClick={togglePlayVoice}
+                className="w-8 h-8 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-2xs transition-transform active:scale-95"
+                title={isPlayingVoice ? 'Pause' : 'Play voice note'}
+              >
+                {isPlayingVoice ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+              </button>
+              <div className="min-w-0">
+                <span className="text-xs font-semibold text-[#16261E] block truncate">
+                  Voice Note Instruction
+                </span>
+                <span className="text-[10px] text-[#76857D] font-medium block">
+                  Duration: {job.voiceNoteDuration || '0:12'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 text-[#0C6B44] text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#E2F3DD]">
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>Attached</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Requested Workers List (Consolidated at Bottom with Pure Status & Phone Icon for Matched) */}
+      {/* Requested Workers List */}
       <div className="glass rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-white shadow-xs space-y-3 mb-4">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-[#76857D] uppercase tracking-wider block">
             Requested Workers ({job.requests.length})
           </span>
-
-          {/* Request Additional Workers: ONLY for scheduled jobs (NOT urgent 5m jobs) */}
-          {!isUrgent && isActive && (
-            <button
-              type="button"
-              onClick={() => {
-                requestMoreWorkers(job.id);
-                navigate('/workers');
-              }}
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-[#E2F3DD] text-[#0C6B44] border border-[#CBD8CA] text-[11px] font-bold shadow-2xs transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Request Additional Workers</span>
-            </button>
-          )}
         </div>
 
         <div className="divide-y divide-[#E3ECE0]">
@@ -392,6 +358,9 @@ export const JobDetailsPage: React.FC = () => {
             const isWorkerWaiting = req.status === 'pending';
             const isWorkerRejected = req.status === 'rejected';
             const isWorkerCancelled = req.status === 'cancelled';
+
+            const hourlyWage = worker.wage || '₹180/hr';
+            const dailyWage = worker.dailyWage || '₹800/day';
 
             return (
               <div key={req.workerId} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
@@ -413,19 +382,30 @@ export const JobDetailsPage: React.FC = () => {
                     <h4 className="font-display text-sm font-bold text-[#16261E] truncate">
                       {worker.name}
                     </h4>
-                    <div className="flex items-center gap-1.5 text-xs text-[#76857D] mt-0.5">
-                      <span className="flex items-center gap-0.5 text-[#16261E] font-bold">
-                        <Star className="w-3 h-3 fill-[#E0A800] text-[#E0A800] stroke-none shrink-0" />
-                        <span>{worker.rating}</span>
-                      </span>
-                      <span>•</span>
-                      <span>{worker.distance} km</span>
+                    {/* Replaced distance and review with Daily and Hourly Wage */}
+                    <div className="flex items-center gap-1.5 text-xs text-[#0C6B44] font-semibold mt-0.5">
+                      <span>{dailyWage}</span>
+                      <span className="text-[#CBD8CA]">•</span>
+                      <span>{hourlyWage}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Pure Status Badge & Phone Icon ONLY if matched */}
+                {/* Action & Status in a neat line: Call button first if matched, then status badge */}
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* ONLY show Phone Icon if worker is matched - placed BEFORE status */}
+                  {isWorkerMatched && (
+                    <button
+                      type="button"
+                      onClick={() => callWorker(worker)}
+                      className="w-8 h-8 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer"
+                      title={`Call ${worker.name}`}
+                    >
+                      <Phone className="w-3.5 h-3.5 fill-current" />
+                    </button>
+                  )}
+
+                  {/* Status Badge */}
                   {isWorkerMatched && (
                     <span className="px-2.5 py-1 rounded-full bg-[#E2F3DD] text-[#0C6B44] text-[11px] font-bold border border-[#3AAA48]/30">
                       Matched
@@ -446,23 +426,34 @@ export const JobDetailsPage: React.FC = () => {
                       Cancelled
                     </span>
                   )}
-
-                  {/* ONLY show Phone Icon if worker is matched */}
-                  {isWorkerMatched && (
-                    <button
-                      type="button"
-                      onClick={() => callWorker(worker)}
-                      className="w-8 h-8 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer"
-                      title={`Call ${worker.name}`}
-                    >
-                      <Phone className="w-3.5 h-3.5 fill-current" />
-                    </button>
-                  )}
                 </div>
               </div>
             );
           })}
         </div>
+
+        {/* Clean solid card: Request Additional Worker with Plus button */}
+        {!isUrgent && isActive && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                requestMoreWorkers(job.id);
+                navigate(`/workers?jobId=${job.id}`);
+              }}
+              className="w-full p-3 rounded-2xl border border-[#E3ECE0] hover:border-[#3AAA48] bg-white hover:bg-[#F6FAF4] flex items-center gap-3 transition-all cursor-pointer group active:scale-[0.99] shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-2xs">
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <div className="text-left min-w-0 flex-1">
+                <span className="font-display text-xs font-bold text-[#16261E] group-hover:text-[#0C6B44] transition-colors block">
+                  Request Additional Worker
+                </span>
+              </div>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Customer Grounded Actions */}

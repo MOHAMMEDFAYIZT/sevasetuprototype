@@ -52,6 +52,8 @@ export interface Job {
   time: string;
   location: string;
   description: string;
+  hasVoiceNote?: boolean;
+  voiceNoteDuration?: string;
   wage: string;
   status: JobStatus;
   requests: WorkerRequest[];
@@ -67,6 +69,8 @@ export interface DraftJob {
   location: string;
   locationMode: 'saved' | 'current';
   description: string;
+  hasVoiceNote?: boolean;
+  voiceNoteDuration?: string;
   wageMin: number;
   wageMax: number;
   workersNeeded?: number;

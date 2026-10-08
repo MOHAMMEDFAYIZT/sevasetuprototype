@@ -60,18 +60,18 @@ export const AppLayout: React.FC = () => {
   // When route or tab changes: reset navbar visibility and dismiss keyboard
   const prevPathRef = useRef(location.pathname);
   useEffect(() => {
-    if (prevPathRef.current !== location.pathname) {
-      prevPathRef.current = location.pathname;
-      setIsNavVisible(true);
-      lastScrollTop.current = 0;
-      closeKeyboard();
-      (document.activeElement as HTMLElement)?.blur();
-    }
+    prevPathRef.current = location.pathname;
+    setIsNavVisible(true);
+    lastScrollTop.current = 0;
+    closeKeyboard();
+    (document.activeElement as HTMLElement)?.blur();
   }, [location.pathname, closeKeyboard]);
 
-  // Mobile virtual keyboard: opens whenever an input or textarea is tapped
+  // Mobile virtual keyboard: opens ONLY when user explicitly clicks/taps an input or textarea
   useEffect(() => {
-    let lastFocusTime = 0;
+    // Initial mount: ensure keyboard starts closed and any stray active element is blurred
+    closeKeyboard();
+    (document.activeElement as HTMLElement)?.blur();
 
     const isEligibleElement = (el: HTMLElement | null): boolean => {
       if (!el) return false;
@@ -83,38 +83,27 @@ export const AppLayout: React.FC = () => {
       return false;
     };
 
-    const handleFocusIn = (e: FocusEvent) => {
+    const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
-      if (isEligibleElement(target)) {
-        lastFocusTime = Date.now();
-        (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = target;
+      if (!target) return;
+
+      // Locate if clicked element is or is within an input or textarea
+      const inputEl = (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+        ? target
+        : target.closest('input, textarea')) as HTMLInputElement | HTMLTextAreaElement | null;
+
+      if (inputEl && isEligibleElement(inputEl)) {
+        (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = inputEl;
         openKeyboard();
       }
     };
 
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (isEligibleElement(target)) {
-        const timeSinceFocus = Date.now() - lastFocusTime;
-        if (timeSinceFocus > 350 && isKeyboardOpen && document.activeElement === target) {
-          // Second tap on the already focused input -> dismiss keyboard like Done button
-          closeKeyboard();
-          target?.blur();
-        } else {
-          (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = target;
-          openKeyboard();
-        }
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('click', handleClick);
 
     return () => {
-      document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('click', handleClick);
     };
-  }, [openKeyboard, closeKeyboard, isKeyboardOpen]);
+  }, [openKeyboard, closeKeyboard]);
 
   return (
     <div className="phone-frame">

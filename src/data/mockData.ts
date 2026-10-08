@@ -279,6 +279,28 @@ export const WORKERS_DATABASE: Worker[] = [
     matchedSkill: 'Plumber',
     about: 'Experienced in faucet installations, block removal, and bathroom fixture servicing.'
   },
+  { 
+    id: 13, 
+    name: 'Manoj Kumar', 
+    category: 'Plumber', 
+    rating: 4.6, 
+    reviewsCount: 16, 
+    completedJobsCount: 16,
+    distance: 4.1, 
+    wage: '₹210/hr', 
+    dailyWage: '₹840/day',
+    serviceWages: {
+      'Plumber': { hourly: '₹210/hr', daily: '₹840/day' }
+    },
+    badgeTier: 'Silver',
+    badgePoints: 210,
+    phone: '+91 94462 88990', 
+    initial: 'M',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
+    skills: ['Plumber'],
+    matchedSkill: 'Plumber',
+    about: 'Specialist in bathroom pipe fittings, tap repair, and water tank pipeline leakage works in Palakkad.'
+  },
 
   { 
     id: 30, 

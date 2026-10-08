@@ -85,7 +85,7 @@ export const WorkersListPage: React.FC = () => {
         requestWorkerForJob(targetJob.id, workerId);
       });
       showToast(`Request sent to ${additionalSelectedIds.length} more worker${additionalSelectedIds.length > 1 ? 's' : ''}!`);
-      navigate(`/jobs/${targetJob.id}`);
+      navigate(`/jobs/${targetJob.id}`, { replace: true });
     } else {
       if (selectedWorkerIds.length < neededCount) {
         showToast(

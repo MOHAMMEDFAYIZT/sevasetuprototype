@@ -2,7 +2,7 @@ import type { Job } from '../types';
 
 /**
  * Checks if a job was scheduled for "today" on the same day it was created.
- * Today's immediate jobs are considered URGENT (5-minute matching lifespan).
+ * Today's immediate jobs are considered URGENT (3-minute matching lifespan).
  * Other scheduled jobs (tomorrow or later) have a standard 3-hour match lifespan.
  */
 export const isJobUrgent = (job: Job): boolean => {
@@ -16,8 +16,8 @@ export const isJobUrgent = (job: Job): boolean => {
 };
 
 /**
- * Returns remaining seconds for urgent job (5 minutes = 300 seconds from createdAt).
- * If createdAt is invalid or older than 5 minutes, returns 0 (expired).
+ * Returns remaining seconds for urgent job (3 minutes = 180 seconds from createdAt).
+ * If createdAt is invalid or older than 3 minutes, returns 0 (expired).
  */
 export const getUrgentJobTimeRemaining = (job: Job): { remainingSeconds: number; isExpired: boolean; formatted: string } => {
   if (!isJobUrgent(job)) {
@@ -27,7 +27,7 @@ export const getUrgentJobTimeRemaining = (job: Job): { remainingSeconds: number;
   const createdTime = job.createdAt ? new Date(job.createdAt).getTime() : Date.now();
   const now = Date.now();
   const elapsedSec = Math.max(0, Math.floor((now - createdTime) / 1000));
-  const totalLifespanSec = 300; // 5 minutes
+  const totalLifespanSec = 180; // 3 minutes
 
   const remaining = Math.max(0, totalLifespanSec - elapsedSec);
   const isExpired = remaining <= 0;

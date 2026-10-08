@@ -11,8 +11,6 @@ import {
   History,
   Headphones,
   FileText,
-  Phone,
-  MessageCircle,
   Globe,
   Pencil
 } from 'lucide-react';
@@ -138,49 +136,65 @@ export const ProfilePage: React.FC = () => {
           <a
             href="tel:18004250001"
             onClick={() => showToast('Calling support: 1800-425-0001...')}
-            className="glass rounded-2xl p-4 border border-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#0C6B44] transition-all cursor-pointer group"
+            className="glass rounded-2xl p-3.5 sm:p-4 border border-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#0C6B44] transition-all cursor-pointer group"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
-                <Phone className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Exact worker phone spark icon */}
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#E2F3DD] to-[#CDEBB9] text-[#0C6B44] flex items-center justify-center shrink-0 shadow-2xs border border-[#CBD8CA]">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
               </div>
-              <div>
-                <h4 className="font-display text-sm font-bold text-[#16261E] group-hover:text-[#0C6B44]">
+              <div className="min-w-0">
+                <h4 className="font-display text-[15px] font-semibold text-[#16261E] group-hover:text-[#0C6B44] transition-colors leading-snug">
                   Call support
                 </h4>
-                <p className="text-xs text-[#76857D] font-medium mt-0.5">
+                <p className="text-xs text-[#76857D] font-normal mt-0.5 leading-snug">
                   Free call, every day 8 AM – 8 PM (1800-425-0001)
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-[#76857D] group-hover:translate-x-0.5 transition-transform shrink-0" />
+            {/* Worker upright arrow icon */}
+            <div className="w-8 h-8 rounded-full bg-[#F6FAF4] border border-[#CBD8CA] text-[#76857D] group-hover:text-[#0C6B44] group-hover:border-[#0C6B44] flex items-center justify-center shrink-0 transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M7 17 17 7"/><path d="M8 7h9v9"/>
+              </svg>
+            </div>
           </a>
 
           {/* Chat Support Card */}
           <button
             type="button"
             onClick={() => showToast('Opening Seva Setu chat support...')}
-            className="w-full glass rounded-2xl p-4 border border-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#0C6B44] transition-all cursor-pointer text-left group"
+            className="w-full glass rounded-2xl p-3.5 sm:p-4 border border-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#0C6B44] transition-all cursor-pointer text-left group"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
-                <MessageCircle className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Exact worker message bubble spark icon */}
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#E2F3DD] to-[#CDEBB9] text-[#0C6B44] flex items-center justify-center shrink-0 shadow-2xs border border-[#CBD8CA]">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/>
+                </svg>
               </div>
-              <div>
-                <h4 className="font-display text-sm font-bold text-[#16261E] group-hover:text-[#0C6B44]">
+              <div className="min-w-0">
+                <h4 className="font-display text-[15px] font-semibold text-[#16261E] group-hover:text-[#0C6B44] transition-colors leading-snug">
                   Chat with us
                 </h4>
-                <p className="text-xs text-[#76857D] font-medium mt-0.5">
+                <p className="text-xs text-[#76857D] font-normal mt-0.5 leading-snug">
                   Send a message, we reply fast
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-[#76857D] group-hover:translate-x-0.5 transition-transform shrink-0" />
+            {/* Worker upright arrow icon */}
+            <div className="w-8 h-8 rounded-full bg-[#F6FAF4] border border-[#CBD8CA] text-[#76857D] group-hover:text-[#0C6B44] group-hover:border-[#0C6B44] flex items-center justify-center shrink-0 transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M7 17 17 7"/><path d="M8 7h9v9"/>
+              </svg>
+            </div>
           </button>
 
           {/* Common Questions (Accordion) */}
           <div className="pt-2 space-y-2">
-            <span className="text-[11px] font-bold text-[#76857D] uppercase tracking-wider block px-1">
+            <span className="text-[11px] font-semibold text-[#76857D] uppercase tracking-wider block px-1">
               Common questions
             </span>
 
@@ -194,7 +208,7 @@ export const ProfilePage: React.FC = () => {
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                       className="w-full flex items-center justify-between text-left gap-2 cursor-pointer"
                     >
-                      <span className="font-display text-xs sm:text-sm font-bold text-[#16261E]">
+                      <span className="font-display text-xs sm:text-sm font-semibold text-[#16261E]">
                         {item.q}
                       </span>
                       <ChevronDown className={`w-4 h-4 text-[#76857D] transition-transform shrink-0 ${isOpen ? 'rotate-180 text-[#0C6B44]' : ''}`} />

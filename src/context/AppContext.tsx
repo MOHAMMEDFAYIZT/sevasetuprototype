@@ -275,6 +275,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       time: draftJob.time,
       location: draftJob.locationMode === 'saved' ? user.location : 'Current Location',
       description: draftJob.description.trim() || `Requirement for ${draftJob.category}`,
+      hasVoiceNote: draftJob.hasVoiceNote,
+      voiceNoteDuration: draftJob.voiceNoteDuration,
       wage: `₹${draftJob.wageMin}–₹${draftJob.wageMax} / hr`,
       status: 'looking',
       requests: selectedWorkerIds.map(wId => ({
@@ -375,6 +377,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       time: finalTime,
       location: finalLocation,
       description: finalDesc,
+      hasVoiceNote: draftJob.hasVoiceNote,
+      voiceNoteDuration: draftJob.voiceNoteDuration,
       wage: worker.wage,
       status: 'looking',
       requests: [{ workerId: worker.id, status: 'pending' }],

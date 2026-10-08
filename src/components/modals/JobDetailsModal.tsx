@@ -10,7 +10,6 @@ import {
   Square, 
   Play, 
   Pause, 
-  Trash2, 
   Edit3,
   UserCheck,
   MapPin,
@@ -52,7 +51,6 @@ export const JobDetailsModal: React.FC = () => {
     setSelectedWorkerIds,
     createJobForWorker,
     user,
-    openLocationModal,
     isKeyboardOpen,
     openKeyboard,
     showToast
@@ -291,231 +289,226 @@ export const JobDetailsModal: React.FC = () => {
       {/* Native Bottom Sheet touching phone sides as normal mobile modals */}
       <div 
         ref={sheetContentRef}
-        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-4 sm:p-5 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col max-h-[88%] overflow-y-auto scrollbar-none transition-all duration-200"
+        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-4 sm:p-5 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col max-h-[92%] overflow-y-auto scrollbar-none transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle pill */}
-        <div className="w-11 h-1 bg-[#CBD8CA] rounded-full mx-auto mb-3 shrink-0" />
+        <div className="w-12 h-1 bg-[#CBD8CA] rounded-full mx-auto mb-3 shrink-0" />
 
-        {/* Compact Top Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
+        {/* Top Header - Compact style matching image */}
+        <div className="flex items-start justify-between gap-3 mb-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            {/* Service Illustration Card */}
-            <div className="w-[68px] h-[68px] rounded-[18px] overflow-hidden bg-[#FEF6EE] border border-[#F3E5D8] shrink-0 shadow-2xs">
+            <div className="w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] rounded-[18px] overflow-hidden bg-[#FEF6EE] border border-[#F3E5D8] shrink-0 p-1 shadow-2xs flex items-center justify-center">
               <img 
                 src={serviceImg} 
                 alt={selectedCategory} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain" 
               />
             </div>
-
-            {/* Name + Subtitle */}
             <div className="min-w-0">
-              <h2 className="font-display text-xl sm:text-[21px] font-bold text-[#16261E] tracking-tight leading-tight truncate">
-                {selectedCategory || 'Electrician'}
+              <h2 className="font-display text-xl sm:text-[22px] font-bold text-[#16261E] tracking-tight leading-tight truncate">
+                {selectedCategory || 'Painter'}
               </h2>
               <p className="text-xs text-[#76857D] font-normal leading-snug mt-0.5">
                 Job details
               </p>
               {targetWorker && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0C6B44] bg-[#E2F3DD] px-2 py-0.5 rounded-full mt-1">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0C6B44] bg-[#E2F3DD] px-2 py-0.5 rounded-full mt-1 border border-[#3AAA48]/30">
                   <UserCheck className="w-2.5 h-2.5 text-[#0C6B44]" />
                   <span>{targetWorker.name}</span>
                 </span>
               )}
             </div>
           </div>
-
-          {/* Clean Circular Close Button */}
           <button
             type="button"
             onClick={handleClose}
-            className="w-7 h-7 rounded-full bg-white hover:bg-[#F6FAF4] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors border border-[#E3ECE0] cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full bg-white hover:bg-[#F6FAF4] flex items-center justify-center text-[#76857D] hover:text-[#16261E] transition-colors border border-[#E3ECE0] cursor-pointer shrink-0 shadow-2xs"
             title="Close"
           >
-            <X className="w-3.5 h-3.5 stroke-[2]" />
+            <X className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
 
-        {/* Content Fields with compact spacing */}
-        <div className="space-y-2.5">
-          {/* 1. Service Location - Slim Card */}
-          <div>
-            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
-              <MapPin className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
-              <span>Service Location</span>
-            </label>
-            <div className="flex items-center justify-between gap-2 bg-[#F6FAF4] border border-[#E3ECE0] rounded-xl py-1.5 px-3 shadow-2xs">
+        {/* Form Cards with spacious layout */}
+        <div className="space-y-3 flex-1 overflow-y-auto pr-0.5">
+          {/* 1. Service Location Card */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="w-8 h-8 rounded-full bg-white border border-[#CBD8CA] text-[#0C6B44] flex items-center justify-center shrink-0 shadow-2xs">
+                <MapPin className="w-4 h-4 stroke-[2.2]" />
+              </div>
               <div className="min-w-0 flex-1">
-                <span className="font-semibold text-xs text-[#16261E] truncate block">
+                <span className="text-[10px] text-[#76857D] font-bold uppercase tracking-wider block">
+                  Service Location
+                </span>
+                <span className="font-semibold text-xs sm:text-[13px] text-[#16261E] truncate block mt-0.5">
                   {currentAddress}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={openLocationModal}
-                className="text-[10px] font-bold text-[#0C6B44] bg-white hover:bg-[#E2F3DD] px-2.5 py-0.5 rounded-full border border-[#CBD8CA] cursor-pointer shrink-0 transition-colors shadow-2xs"
-              >
-                Change
-              </button>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/addresses');
+              }}
+              className="text-[11px] font-bold text-[#0C6B44] bg-white hover:bg-[#E2F3DD] px-3 py-1 rounded-full border border-[#CBD8CA] cursor-pointer shrink-0 transition-colors shadow-2xs"
+            >
+              Change
+            </button>
           </div>
 
-          {/* 2. Service Date - Slim Card with In-App Selector */}
-          <div>
-            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
-              <Calendar className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
-              <span>Service Date</span>
-            </label>
-
+          {/* 2. Schedule Grid: Date & Time in 2 clean cards */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Service Date Card */}
             <div 
               onClick={() => setIsDatePickerOpen(true)}
-              className="relative flex items-center justify-between bg-white border border-[#E3ECE0] hover:border-[#3AAA48] rounded-xl py-1.5 px-3 transition-all shadow-2xs cursor-pointer select-none"
+              className="p-3 rounded-2xl bg-white border border-[#E3ECE0] hover:border-[#3AAA48] transition-all shadow-2xs cursor-pointer select-none group"
             >
-              <span className="font-display text-xs font-bold text-[#16261E] flex-1">
-                {formatDateDisplay(draftJob.date || todayStr)}
+              <span className="text-[10px] text-[#76857D] font-bold uppercase tracking-wider block mb-1.5">
+                Service Date
               </span>
-
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold py-0.5 px-2 rounded-full bg-[#E2F3DD] text-[#0C6B44]">
-                  {(draftJob.date === todayStr || !draftJob.date) ? 'Today' : 'Scheduled'}
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="font-display text-xs sm:text-sm font-bold text-[#16261E] truncate group-hover:text-[#0C6B44] transition-colors">
+                  {formatDateDisplay(draftJob.date || todayStr)}
                 </span>
-                <div className="w-6 h-6 rounded-full bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-center text-[#0C6B44]">
-                  <Calendar className="w-3 h-3 stroke-[2.2]" />
+                <div className="w-6 h-6 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
+                  <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* 3. Preferred Start Time - Slim Card */}
-          <div>
-            <label className="block text-[11px] font-bold text-[#16261E] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
-              <Clock className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
-              <span>Preferred Start Time</span>
-            </label>
-
+            {/* Start Time Card */}
             <div 
               onClick={() => setIsTimePickerOpen(true)}
-              className="relative flex items-center justify-between bg-white border border-[#E3ECE0] hover:border-[#3AAA48] rounded-xl py-1.5 px-3 transition-all shadow-2xs cursor-pointer select-none"
+              className="p-3 rounded-2xl bg-white border border-[#E3ECE0] hover:border-[#3AAA48] transition-all shadow-2xs cursor-pointer select-none group"
             >
-              <span className="font-display text-xs font-bold text-[#16261E]">
-                {draftJob.time || '10:00 AM'}
+              <span className="text-[10px] text-[#76857D] font-bold uppercase tracking-wider block mb-1.5">
+                Start Time
               </span>
-
-              <div className="w-6 h-6 rounded-full bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-center text-[#0C6B44]">
-                <Clock className="w-3 h-3 stroke-[2.2]" />
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="font-display text-xs sm:text-sm font-bold text-[#16261E] truncate group-hover:text-[#0C6B44] transition-colors">
+                  {draftJob.time || '10:00 AM'}
+                </span>
+                <div className="w-6 h-6 rounded-full bg-[#E2F3DD] text-[#0C6B44] flex items-center justify-center shrink-0">
+                  <Clock className="w-3.5 h-3.5 stroke-[2.2]" />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 4. Workers Needed - 1 Single Compact Line */}
+          {/* 3. Workers Needed Stepper Card */}
           {!targetWorker && (
-            <div className="flex items-center justify-between gap-2.5 bg-[#F6FAF4] border border-[#E3ECE0] rounded-xl py-1.5 px-3 shadow-2xs">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-6 h-6 rounded-full bg-white border border-[#CBD8CA] flex items-center justify-center text-[#0C6B44] shrink-0">
-                  <Users className="w-3.5 h-3.5 stroke-[2]" />
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#CBD8CA] text-[#0C6B44] flex items-center justify-center shrink-0 shadow-2xs">
+                  <Users className="w-4 h-4 stroke-[2.2]" />
                 </div>
-                <span className="text-xs font-bold text-[#16261E] truncate">
-                  Workers needed
-                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="font-bold text-xs sm:text-[13px] text-[#16261E] block truncate">
+                    Workers Needed
+                  </span>
+                  <span className="text-[11px] text-[#76857D] block truncate mt-0.5">
+                    Select number of helpers
+                  </span>
+                </div>
               </div>
 
               {/* Connected Stepper Pill */}
-              <div className="flex items-center bg-white border border-[#CBD8CA] rounded-full p-0.5 shadow-2xs shrink-0">
+              <div className="flex items-center bg-white border border-[#CBD8CA] rounded-full p-1 shadow-2xs shrink-0">
                 <button
                   type="button"
                   disabled={workersNeeded <= 1}
                   onClick={() => handleUpdateWorkers(workersNeeded - 1)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
                   aria-label="Decrease workers"
                 >
-                  <Minus className="w-3 h-3" />
+                  <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="w-6 text-center font-display text-xs font-bold text-[#16261E]">
+                <span className="w-7 text-center font-display text-xs sm:text-sm font-bold text-[#16261E]">
                   {workersNeeded}
                 </span>
                 <button
                   type="button"
                   disabled={workersNeeded >= 10}
                   onClick={() => handleUpdateWorkers(workersNeeded + 1)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
                   aria-label="Increase workers"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* 5. Job details (optional) */}
-          <div>
-            <label className="block text-xs font-semibold text-[#16261E] mb-1.5 flex items-center gap-1.5">
-              <Edit3 className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2]" />
-              <span>Job details</span>
-              <span className="text-[11px] font-normal text-[#76857D]">
-                (optional)
-              </span>
-            </label>
+          {/* 4. Job Details (Optional Textarea + Voice Note) */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-[#E3ECE0] shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#16261E] flex items-center gap-1.5">
+                <Edit3 className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+                <span>Job Details</span>
+                <span className="text-[11px] font-normal text-[#76857D]">(optional)</span>
+              </label>
+              <span className="text-[10px] text-[#76857D]">Type or voice record</span>
+            </div>
 
             {/* Textarea Container with inside Mic button */}
-            <div className="relative rounded-2xl border border-[#E3ECE0] bg-white focus-within:border-[#3AAA48] focus-within:ring-2 focus-within:ring-[#3AAA48]/20 transition-all shadow-2xs p-2.5">
+            <div className="relative rounded-xl border border-[#E3ECE0] bg-[#F8FCF9] focus-within:bg-white focus-within:border-[#3AAA48] focus-within:ring-2 focus-within:ring-[#3AAA48]/20 transition-all p-2.5">
               <textarea
                 ref={textareaRef}
-                rows={2}
+                rows={3}
                 value={draftJob.description}
                 onChange={(e) => updateDraftJob({ description: e.target.value })}
-                onFocus={() => {
+                onClick={() => {
                   (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = textareaRef.current;
                   openKeyboard();
                   setTimeout(() => {
                     textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }, 120);
                 }}
-                placeholder="Tell us what needs to be done..."
+                placeholder="Describe your work requirement, parts to repair, or instructions..."
                 className="w-full pr-8 text-xs text-[#16261E] bg-transparent outline-none placeholder:text-[#94A3B8] resize-none leading-relaxed"
               />
 
-              {/* Inside Mic Button on the right */}
-              <div className="absolute right-2.5 bottom-2.5">
-                {isRecording ? (
-                  <button
-                    type="button"
-                    onClick={stopRecording}
-                    className="h-7 px-2 rounded-full bg-[#D3362B] text-white text-[10px] font-semibold flex items-center gap-1 cursor-pointer animate-pulse"
-                    title="Stop recording"
-                  >
-                    <Square className="w-2.5 h-2.5 fill-current" />
-                    <span>0:{recordSeconds < 10 ? `0${recordSeconds}` : recordSeconds}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={startRecording}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                      hasRecordedVoice
-                        ? 'bg-[#E2F3DD] text-[#0C6B44]'
-                        : 'bg-[#F6FAF4] hover:bg-[#E2F3DD] text-[#76857D] hover:text-[#0C6B44] border border-[#E3ECE0]'
-                    }`}
-                    title={hasRecordedVoice ? 'Re-record voice note' : 'Record voice note'}
-                  >
-                    <Mic className="w-3.5 h-3.5 stroke-[2]" />
-                  </button>
-                )}
-              </div>
+              {/* Inside Mic Button on the right - Only shown when NOT attached with a voice note */}
+              {!hasRecordedVoice && (
+                <div className="absolute right-2.5 bottom-2.5">
+                  {isRecording ? (
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="h-7 px-2 rounded-full bg-[#D3362B] text-white text-[10px] font-semibold flex items-center gap-1 cursor-pointer animate-pulse"
+                      title="Stop recording"
+                    >
+                      <Square className="w-2.5 h-2.5 fill-current" />
+                      <span>0:{recordSeconds < 10 ? `0${recordSeconds}` : recordSeconds}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer bg-white hover:bg-[#E2F3DD] text-[#76857D] hover:text-[#0C6B44] border border-[#E3ECE0]"
+                      title="Record voice note"
+                    >
+                      <Mic className="w-3.5 h-3.5 stroke-[2]" />
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Attached Voice Note preview inside textarea container */}
               {hasRecordedVoice && !isRecording && (
-                <div className="mt-2 pt-2 border-t border-[#E3ECE0]/80 flex items-center justify-between gap-2 bg-[#F6FAF4] px-2.5 py-1 rounded-lg">
+                <div className="mt-2 pt-2 border-t border-[#E3ECE0] flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-[#E3ECE0]">
                   <div className="flex items-center gap-2 min-w-0">
                     <button
                       type="button"
                       onClick={togglePlayVoice}
-                      className="w-5 h-5 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shrink-0 cursor-pointer"
+                      className="w-6 h-6 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-2xs transition-transform active:scale-95"
                       title={isPlayingVoice ? 'Pause' : 'Play voice note'}
                     >
                       {isPlayingVoice ? <Pause className="w-2.5 h-2.5 fill-current" /> : <Play className="w-2.5 h-2.5 fill-current ml-0.5" />}
                     </button>
-                    <span className="text-[10px] font-semibold text-[#16261E] truncate">
+                    <span className="text-[11px] font-semibold text-[#16261E] truncate">
                       Voice Note ({voiceDuration})
                     </span>
                   </div>
@@ -523,10 +516,11 @@ export const JobDetailsModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={deleteVoiceNote}
-                    className="p-0.5 text-[#76857D] hover:text-[#D3362B] transition-colors cursor-pointer"
+                    className="w-6 h-6 rounded-full bg-rose-50 hover:bg-rose-100 text-[#D3362B] flex items-center justify-center transition-colors cursor-pointer shrink-0"
                     title="Remove voice note"
+                    aria-label="Remove voice note"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
                   </button>
                 </div>
               )}
@@ -535,13 +529,13 @@ export const JobDetailsModal: React.FC = () => {
         </div>
 
         {/* Modal Action CTA */}
-        <div className="pt-3.5 mt-1 shrink-0">
+        <div className="pt-3.5 mt-2 border-t border-[#F0F5EE] shrink-0">
           <button
             type="button"
             onClick={handleFindWorkers}
-            className="w-full h-11 sm:h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-semibold text-sm sm:text-[15px] flex items-center justify-center shadow-[0_10px_20px_rgba(12,107,68,0.25)] transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-semibold text-sm sm:text-base flex items-center justify-center shadow-[0_10px_20px_rgba(12,107,68,0.25)] transition-all active:scale-[0.98] cursor-pointer"
           >
-            <span>Find Workers</span>
+            <span>{targetWorker ? `Request ${targetWorker.name}` : 'Find Workers'}</span>
           </button>
         </div>
       </div>

@@ -40,7 +40,7 @@ const REAL_SEARCH_SUGGESTIONS = [
 ];
 
 export const SelectLocationPage: React.FC = () => {
-  const { user, updateUser, showToast } = useApp();
+  const { user, updateUser, updateDraftJob, showToast } = useApp();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,18 +82,22 @@ export const SelectLocationPage: React.FC = () => {
 
   const handleSelectAddress = (addr: SavedAddressItem) => {
     updateUser({ location: addr.shortLocation });
+    updateDraftJob({ location: addr.shortLocation });
     showToast(`Location set to ${addr.label} (${addr.shortLocation})`);
     navigate(-1);
   };
 
   const handleUseCurrentLocation = () => {
-    updateUser({ location: 'Fort Maidan, Palakkad' });
+    const loc = 'Fort Maidan, Palakkad';
+    updateUser({ location: loc });
+    updateDraftJob({ location: loc });
     showToast('Detected current location via GPS');
     navigate(-1);
   };
 
   const handleSelectSearchResult = (result: typeof REAL_SEARCH_SUGGESTIONS[0]) => {
     updateUser({ location: result.name });
+    updateDraftJob({ location: result.name });
     showToast(`Location set to ${result.name}`);
     navigate(-1);
   };
@@ -116,6 +120,7 @@ export const SelectLocationPage: React.FC = () => {
     };
     setSavedAddresses(prev => [newAddrItem, ...prev]);
     updateUser({ location: newStreet.trim() });
+    updateDraftJob({ location: newStreet.trim() });
     setShowAddForm(false);
     setNewHouseNo('');
     setNewStreet('');
