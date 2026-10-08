@@ -8,15 +8,46 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ isVisible = true }) => {
   const location = useLocation();
-  const isMainTab = ['/', '/jobs', '/favourites', '/profile'].includes(location.pathname);
+  const currentPath = location.pathname;
+  
+  // Display navbar on main tabs as well as Past Works, Notifications, and Saved Addresses
+  const isNavPage = [
+    '/', 
+    '/jobs', 
+    '/favourites', 
+    '/profile', 
+    '/past-jobs', 
+    '/notifications', 
+    '/addresses'
+  ].includes(currentPath);
 
-  if (!isMainTab) return null;
+  if (!isNavPage) return null;
 
   const navItems = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/jobs', label: 'My Jobs', icon: Calendar },
-    { to: '/favourites', label: 'Favourites', icon: Heart },
-    { to: '/profile', label: 'Profile', icon: User },
+    { 
+      to: '/', 
+      label: 'Home', 
+      icon: Home,
+      isActive: currentPath === '/' || currentPath === '/notifications'
+    },
+    { 
+      to: '/jobs', 
+      label: 'My Jobs', 
+      icon: Calendar,
+      isActive: currentPath === '/jobs'
+    },
+    { 
+      to: '/favourites', 
+      label: 'Favourites', 
+      icon: Heart,
+      isActive: currentPath === '/favourites'
+    },
+    { 
+      to: '/profile', 
+      label: 'Profile', 
+      icon: User,
+      isActive: currentPath === '/profile' || currentPath === '/past-jobs' || currentPath === '/addresses'
+    },
   ];
 
   return (
@@ -31,19 +62,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({ isVisible = true }) => {
       <div className="ss-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const active = item.isActive;
           return (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
-              className={({ isActive }) => `ss-navbtn ${isActive ? 'on' : ''}`}
+              className={`ss-navbtn ${active ? 'on' : ''}`}
             >
-              {({ isActive }) => (
-                <>
-                  <Icon className={`w-[22px] h-[22px] ${isActive ? 'stroke-[2.2]' : 'stroke-[1.9]'}`} />
-                  <span>{item.label}</span>
-                </>
-              )}
+              <Icon className={`w-[22px] h-[22px] ${active ? 'stroke-[2.2]' : 'stroke-[1.9]'}`} />
+              <span>{item.label}</span>
             </NavLink>
           );
         })}

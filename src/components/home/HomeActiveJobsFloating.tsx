@@ -10,7 +10,7 @@ interface HomeActiveJobsFloatingProps {
 }
 
 export const HomeActiveJobsFloating: React.FC<HomeActiveJobsFloatingProps> = ({ isNavVisible = true }) => {
-  const { jobs, retryUrgentJob } = useApp();
+  const { jobs, openCreateJobModalFromJob } = useApp();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -35,47 +35,58 @@ export const HomeActiveJobsFloating: React.FC<HomeActiveJobsFloatingProps> = ({ 
     return hours * 60 + minutes;
   };
 
-  // 1. Pending requests (Urgent jobs prioritized first, then other pending jobs)
-  const pendingJobs = jobs
-    .filter(j => j.status === 'looking')
-    .sort((a, b) => {
-      const aUrgent = isJobUrgent(a) ? 1 : 0;
-      const bUrgent = isJobUrgent(b) ? 1 : 0;
-      if (aUrgent !== bUrgent) return bUrgent - aUrgent;
-      return (b.id || 0) - (a.id || 0);
-    });
-
-  // 2. Nearest upcoming service day's matched jobs
   const todayStr = new Date().toISOString().split('T')[0];
-  const matchedJobs = jobs.filter(j => j.status === 'matched');
 
-  // Find all matched jobs for today
-  const matchedToday = matchedJobs.filter(j => j.date === todayStr);
+  // Active jobs: status is 'looking' or 'matched', and scheduled date is not in the past
+  const validActiveJobs = jobs.filter(j => 
+    (j.status === 'looking' || j.status === 'matched') &&
+    (j.date ? j.date.split('T')[0] >= todayStr : true)
+  );
 
-  let targetDayMatchedJobs: typeof matchedJobs = [];
+  // 2-DAY RULE IMPLEMENTATION:
+  // - Extract all distinct dates that have active jobs on or after today
+  // - If today has active jobs: target dates are [Today, next 1 upcoming date]
+  // - If today has NO active jobs: target dates are [1st upcoming date, 2nd upcoming date]
+  const hasJobsToday = validActiveJobs.some(j => (j.date?.split('T')[0] || todayStr) === todayStr);
 
-  if (matchedToday.length > 0) {
-    // If there are confirmed jobs scheduled for today, show all of today's jobs (chronologically)
-    targetDayMatchedJobs = matchedToday.sort(
-      (a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time)
-    );
-  } else if (matchedJobs.length > 0) {
-    // Otherwise, find the next earliest service date among confirmed jobs
-    const upcomingDates = Array.from(new Set(matchedJobs.map(j => j.date))).sort();
-    const nearestDate = upcomingDates.find(d => d >= todayStr) || upcomingDates[0];
-    targetDayMatchedJobs = matchedJobs
-      .filter(j => j.date === nearestDate)
-      .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
+  const futureDistinctDates = Array.from(
+    new Set(
+      validActiveJobs
+        .map(j => j.date?.split('T')[0] || todayStr)
+        .filter(d => d > todayStr)
+    )
+  ).sort();
+
+  let targetDates: string[] = [];
+  if (hasJobsToday) {
+    // Today + next 1 upcoming date
+    targetDates = [todayStr];
+    if (futureDistinctDates.length > 0) {
+      targetDates.push(futureDistinctDates[0]);
+    }
+  } else {
+    // 2 upcoming dates
+    targetDates = futureDistinctDates.slice(0, 2);
   }
 
-  // Combine: Pending first, followed by confirmed upcoming jobs, limited strictly to the first 2 jobs
-  const combinedJobs = [...pendingJobs, ...targetDayMatchedJobs];
-  // Deduplicate and take first 2 jobs
-  const uniqueJobMap = new Map<number, typeof combinedJobs[0]>();
-  combinedJobs.forEach(j => {
-    if (!uniqueJobMap.has(j.id)) uniqueJobMap.set(j.id, j);
-  });
-  const activeJobs = Array.from(uniqueJobMap.values()).slice(0, 2);
+  // Filter jobs belonging ONLY to the target dates
+  const activeJobs = validActiveJobs
+    .filter(j => {
+      const jobDate = j.date?.split('T')[0] || todayStr;
+      return targetDates.includes(jobDate);
+    })
+    .sort((a, b) => {
+      const aDate = a.date?.split('T')[0] || todayStr;
+      const bDate = b.date?.split('T')[0] || todayStr;
+      if (aDate !== bDate) return aDate.localeCompare(bDate);
+
+      // Within the same day: urgent looking jobs first, then by time
+      const aUrgent = isJobUrgent(a) && a.status === 'looking' ? 1 : 0;
+      const bUrgent = isJobUrgent(b) && b.status === 'looking' ? 1 : 0;
+      if (aUrgent !== bUrgent) return bUrgent - aUrgent;
+
+      return parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time);
+    });
 
   if (activeJobs.length === 0) return null;
 
@@ -221,7 +232,7 @@ export const HomeActiveJobsFloating: React.FC<HomeActiveJobsFloatingProps> = ({ 
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          retryUrgentJob(job.id);
+                          openCreateJobModalFromJob(job);
                         }}
                         className="px-2.5 py-1 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-[11px] font-bold shadow-2xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
                       >

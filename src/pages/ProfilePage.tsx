@@ -15,6 +15,8 @@ import {
   Pencil
 } from 'lucide-react';
 
+import { isScheduledJobExpired } from '../utils/urgency';
+
 export const ProfilePage: React.FC = () => {
   const { 
     user, 
@@ -35,7 +37,7 @@ export const ProfilePage: React.FC = () => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const pastCount = jobs.filter(j => 
-    j.status === 'completed' || j.status === 'cancelled' || j.status === 'unfilled'
+    j.status === 'completed' || j.status === 'cancelled' || j.status === 'unfilled' || isScheduledJobExpired(j)
   ).length;
 
   const handleSaveProfile = (e: React.FormEvent) => {

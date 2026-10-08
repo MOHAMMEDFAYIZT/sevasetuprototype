@@ -23,42 +23,59 @@ interface NotificationItem {
 
 export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { jobs, showToast, openJobDetails, openRateModal } = useApp();
+  const { showToast, openJobDetails, openRateModal } = useApp();
 
-  const activeJobs = jobs.filter(j => j.status === 'looking' || j.status === 'matched');
-  const completedJobs = jobs.filter(j => j.status === 'completed');
-
-  // Direct, concise, uncrowded notification items
+  // Direct, realistic notification items linking directly to existing jobs
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: '1',
-      title: 'Worker Accepted Request',
-      message: 'Murugan confirmed your Electrician job! Tap to view details and call directly.',
+      title: 'Worker Confirmed!',
+      message: 'Murugan & Ramesh confirmed your Electrician job in Kalpathy. Tap to call workers or view schedule.',
       time: '12m ago',
       type: 'match',
-      jobId: activeJobs[0]?.id || 101,
+      jobId: 101,
       read: false,
       actionText: 'View Job'
     },
     {
       id: '2',
-      title: 'Request Sent to Workers',
-      message: 'Your plumbing request was broadcasted to 3 local verified workers.',
-      time: '1h ago',
+      title: 'Searching Nearby Workers',
+      message: 'Urgent plumbing request sent to 3 local verified plumbers. Awaiting response (3-min window).',
+      time: '1m ago',
       type: 'request',
-      jobId: activeJobs[0]?.id || 101,
+      jobId: 105,
       read: false,
       actionText: 'Track Status'
     },
     {
       id: '3',
-      title: 'Work Completed',
-      message: 'Carpentry repair completed successfully. Please leave your rating.',
+      title: 'Urgent Request Expired',
+      message: 'No mechanics were available nearby for your two-wheeler repair. Tap to retry with prefilled details.',
+      time: '4m ago',
+      type: 'request',
+      jobId: 108,
+      read: false,
+      actionText: 'View & Retry'
+    },
+    {
+      id: '4',
+      title: 'Service Completed',
+      message: 'Teak wood door lock repair marked as done by Suresh M. Please submit your rating.',
       time: 'Yesterday',
       type: 'completed',
-      jobId: completedJobs[0]?.id || 102,
+      jobId: 106,
       read: true,
       actionText: 'Rate Service'
+    },
+    {
+      id: '5',
+      title: 'Tomorrow\'s Scheduled Work',
+      message: 'Reminder: Coconut harvesting & farm irrigation helper booked for tomorrow, 8:30 AM.',
+      time: '2h ago',
+      type: 'system',
+      jobId: 102,
+      read: true,
+      actionText: 'View Details'
     }
   ]);
 
@@ -81,13 +98,13 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-36 sm:pb-40 min-h-full relative">
-      {/* Back button at the top (exact match to WorkersListPage) */}
+      {/* Back button at the top - Navigates to Home */}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate('/')}
         className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
-        title="Go back"
-        aria-label="Go back"
+        title="Back to Home"
+        aria-label="Back to Home"
       >
         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
       </button>

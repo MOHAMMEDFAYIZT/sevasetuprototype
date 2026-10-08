@@ -9,7 +9,15 @@ import { VirtualKeyboard } from '../common/VirtualKeyboard';
 export const AppLayout: React.FC = () => {
   const location = useLocation();
   const { openKeyboard, isKeyboardOpen, closeKeyboard } = useApp();
-  const isMainTab = ['/', '/jobs', '/favourites', '/profile'].includes(location.pathname);
+  const isNavPage = [
+    '/', 
+    '/jobs', 
+    '/favourites', 
+    '/profile', 
+    '/past-jobs', 
+    '/notifications', 
+    '/addresses'
+  ].includes(location.pathname);
   const isHomePage = location.pathname === '/';
 
   // Zomato-style navbar scroll state: hide on scroll down, show on scroll up
@@ -111,7 +119,7 @@ export const AppLayout: React.FC = () => {
         {/* Scrollable Viewport with permanently fixed background behind */}
         <main 
           ref={mainRef}
-          className={`screen-content flex flex-col w-full ${isMainTab ? 'pb-[calc(108px+env(safe-area-inset-bottom,0px))]' : 'pb-0'}`}
+          className={`screen-content flex flex-col w-full ${isNavPage ? 'pb-[calc(108px+env(safe-area-inset-bottom,0px))]' : 'pb-0'}`}
         >
           <Outlet />
         </main>

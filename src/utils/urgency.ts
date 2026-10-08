@@ -1,17 +1,12 @@
 import type { Job } from '../types';
 
 /**
- * Checks if a job was scheduled for "today" on the same day it was created.
- * Today's immediate jobs are considered URGENT (3-minute matching lifespan).
- * Other scheduled jobs (tomorrow or later) have a standard 3-hour match lifespan.
+ * Checks if a job is requested for today (Urgent, 3-min matching lifespan).
  */
 export const isJobUrgent = (job: Job): boolean => {
   if (!job.date) return false;
-  
-  // Format check: if job.date matches today's YYYY-MM-DD
   const todayStr = new Date().toISOString().split('T')[0];
   const jobDateStr = job.date.split('T')[0];
-  
   return jobDateStr === todayStr;
 };
 
@@ -38,4 +33,20 @@ export const getUrgentJobTimeRemaining = (job: Job): { remainingSeconds: number;
 
   return { remainingSeconds: remaining, isExpired, formatted };
 };
+
+/**
+ * Checks if a job has expired or passed its scheduled date:
+ * - A job scheduled for a past date (date < todayStr) has passed its day end.
+ * - Completed, cancelled, or unfilled jobs are also considered past.
+ */
+export const isScheduledJobExpired = (job: Job): boolean => {
+  if (job.status === 'completed' || job.status === 'cancelled' || job.status === 'unfilled') {
+    return true;
+  }
+  const todayStr = new Date().toISOString().split('T')[0];
+  const jobDateStr = (job.date || '').split('T')[0];
+  // If the scheduled date is earlier than today, it has expired (day has ended)
+  return jobDateStr < todayStr;
+};
+
 

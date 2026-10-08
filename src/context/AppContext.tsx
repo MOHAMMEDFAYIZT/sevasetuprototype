@@ -57,8 +57,6 @@ interface AppContextType {
   rateJob: (jobId: number, stars: number) => void;
   callWorker: (worker: Worker) => void;
   retryUrgentJob: (jobId: number) => void;
-  retryingJobId: number | null;
-  setRetryingJobId: (id: number | null) => void;
   
   // Simulator Triggers
   simulateWorkerAcceptance: (jobId: number, targetWorkerId?: number) => void;
@@ -72,6 +70,7 @@ interface AppContextType {
   hideToast: () => void;
   isCreateJobModalOpen: boolean;
   openCreateJobModal: (cat?: string) => void;
+  openCreateJobModalFromJob: (job: Job) => void;
   closeCreateJobModal: () => void;
   isLocationModalOpen: boolean;
   openLocationModal: () => void;
@@ -150,11 +149,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([1, 2]);
   const [favourites, setFavourites] = useState<number[]>([1, 10, 20]);
   const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('SEVA_SETU_JOBS_V6');
+    const saved = localStorage.getItem('SEVA_SETU_JOBS_V7');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 5) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 8) return parsed;
       } catch {
         // fallback
       }
@@ -167,7 +166,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Modals & Feedback
   const [toast, setToast] = useState<string | null>(null);
-  const [retryingJobId, setRetryingJobId] = useState<number | null>(null);
   const [isCreateJobModalOpen, setIsCreateJobModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -194,7 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('SEVA_SETU_JOBS_V6', JSON.stringify(jobs));
+    localStorage.setItem('SEVA_SETU_JOBS_V7', JSON.stringify(jobs));
   }, [jobs]);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -271,42 +269,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const closeSentJobConfirmation = () => setSentJobConfirmation(null);
 
   const createJobFromDraft = () => {
-    // If retrying an urgent job, overwrite the existing card in-place instead of creating a new one
-    if (retryingJobId) {
-      setJobs(prev => prev.map(j => {
-        if (j.id === retryingJobId) {
-          return {
-            ...j,
-            category: draftJob.category,
-            date: draftJob.date || new Date().toISOString().split('T')[0],
-            time: draftJob.time || '10:00 AM',
-            location: draftJob.location || (draftJob.locationMode === 'saved' ? user.location : 'Current Location'),
-            description: draftJob.description.trim() || `Requirement for ${draftJob.category}`,
-            hasVoiceNote: draftJob.hasVoiceNote,
-            voiceNoteDuration: draftJob.voiceNoteDuration,
-            status: 'looking',
-            requests: selectedWorkerIds.map(wId => ({
-              workerId: wId,
-              status: 'pending'
-            })),
-            rating: null,
-            createdAt: new Date().toISOString()
-          };
-        }
-        return j;
-      }));
-      setIsConfirmModalOpen(false);
-      setCurrentJobId(retryingJobId);
-      setSentJobConfirmation({
-        jobId: retryingJobId,
-        workerCount: selectedWorkerIds.length,
-        category: draftJob.category
-      });
-      setRetryingJobId(null);
-      showToast('⚡ Urgent request updated & rebroadcasted!');
-      return;
-    }
-
     const newJob: Job = {
       id: Date.now(),
       category: draftJob.category,
@@ -533,35 +495,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const retryUrgentJob = (jobId: number) => {
-    const targetJob = jobs.find(j => j.id === jobId);
-    if (!targetJob) return;
-
-    // Set retry target to overwrite this urgent job card in-place upon submission
-    setRetryingJobId(jobId);
-
-    // Pre-fill draftJob with all this job's existing details (no wage field shown in modal)
-    setSelectedCategory(targetJob.category);
-    setDraftJob({
-      category: targetJob.category,
-      date: targetJob.date || new Date().toISOString().split('T')[0],
-      time: targetJob.time || '10:00 AM',
-      timeSlot: 'morning',
-      location: targetJob.location || user.location,
-      locationMode: 'saved',
-      description: targetJob.description || '',
-      wageMin: 350,
-      wageMax: 500,
-      hasVoiceNote: targetJob.hasVoiceNote,
-      voiceNoteDuration: targetJob.voiceNoteDuration,
-      workersNeeded: Math.max(1, targetJob.requests?.length || 1)
-    });
-
-    // Pre-select existing worker IDs
-    const previousWorkerIds = targetJob.requests.map(r => r.workerId);
-    setSelectedWorkerIds(previousWorkerIds.length > 0 ? previousWorkerIds : [1, 2]);
-
-    // Open Job Details collection bottom sheet modal directly
-    setIsCreateJobModalOpen(true);
+    setJobs(prev => prev.map(j => {
+      if (j.id === jobId) {
+        return {
+          ...j,
+          status: 'looking',
+          createdAt: new Date().toISOString(),
+          requests: j.requests.map(r => ({
+            ...r,
+            status: r.status === 'accepted' ? 'accepted' : 'pending'
+          }))
+        };
+      }
+      return j;
+    }));
+    showToast('⚡ Urgent request rebroadcasted to nearby workers!');
   };
 
   // Simulator Triggers
@@ -666,8 +614,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const openCreateJobModal = (cat?: string) => {
-    // Starting a normal booking from scratch clears any pending retry target
-    setRetryingJobId(null);
     if (cat) {
       setSelectedCategory(cat);
       setSelectedWorkerIds([]);
@@ -682,6 +628,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setIsCreateJobModalOpen(true);
   };
+
+  const openCreateJobModalFromJob = (job: Job) => {
+    setSelectedCategory(job.category);
+    setSelectedWorkerIds(job.requests.map(r => r.workerId));
+    setDraftJob({
+      category: job.category,
+      date: new Date().toISOString().split('T')[0], // retry urgent is for today
+      time: job.time || '10:00 AM',
+      timeSlot: 'morning',
+      location: job.location || user.location || 'Palakkad Town',
+      locationMode: 'saved',
+      description: job.description || '',
+      wageMin: 350,
+      wageMax: 500,
+      hasVoiceNote: job.hasVoiceNote,
+      voiceNoteDuration: job.voiceNoteDuration,
+      workersNeeded: Math.max(1, job.requests.length)
+    });
+    setIsCreateJobModalOpen(true);
+  };
+
   const closeCreateJobModal = () => setIsCreateJobModalOpen(false);
 
   const openLocationModal = () => setIsLocationModalOpen(true);
@@ -770,8 +737,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         rateJob,
         callWorker,
         retryUrgentJob,
-        retryingJobId,
-        setRetryingJobId,
         simulateWorkerAcceptance,
         simulateWorkerCancellation,
         simulateNoWorkerAccepts,
@@ -781,6 +746,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         hideToast,
         isCreateJobModalOpen,
         openCreateJobModal,
+        openCreateJobModalFromJob,
         closeCreateJobModal,
         isLocationModalOpen,
         openLocationModal,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { WORKERS_DATABASE } from '../data/mockData';
-import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
+import { isJobUrgent, getUrgentJobTimeRemaining, isScheduledJobExpired } from '../utils/urgency';
 import { 
   CheckCircle2, 
   Clock,
@@ -64,8 +64,8 @@ export const MyJobsPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const pendingJobs = jobs.filter(j => j.status === 'looking');
-  const matchedJobs = jobs.filter(j => j.status === 'matched');
+  const pendingJobs = jobs.filter(j => j.status === 'looking' && !isScheduledJobExpired(j));
+  const matchedJobs = jobs.filter(j => j.status === 'matched' && !isScheduledJobExpired(j));
 
   const displayedJobs = activeTab === 'matched' ? matchedJobs : pendingJobs;
 

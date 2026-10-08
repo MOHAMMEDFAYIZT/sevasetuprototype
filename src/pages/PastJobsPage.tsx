@@ -40,12 +40,14 @@ const getServiceIllustration = (category: string) => {
   return '/images/services/most-searched/electrician.png';
 };
 
+import { isScheduledJobExpired } from '../utils/urgency';
+
 export const PastJobsPage: React.FC = () => {
   const { jobs, openCreateJobModal, openRateModal, openJobDetails } = useApp();
   const navigate = useNavigate();
 
   const pastJobs = jobs.filter(j => 
-    j.status === 'completed' || j.status === 'cancelled' || j.status === 'unfilled'
+    j.status === 'completed' || j.status === 'cancelled' || j.status === 'unfilled' || isScheduledJobExpired(j)
   );
 
   const formatDate = (dateStr: string) => {

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { WORKERS_DATABASE } from '../data/mockData';
-import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
+import { isJobUrgent, getUrgentJobTimeRemaining, isScheduledJobExpired } from '../utils/urgency';
 import { 
   ChevronLeft,
   Phone, 
@@ -192,7 +192,7 @@ export const JobDetailsPage: React.FC = () => {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const isPastJob = job.status === 'completed' || job.status === 'cancelled' || job.status === 'unfilled';
+  const isPastJob = job.status === 'completed' || job.status === 'cancelled' || job.status === 'unfilled' || isScheduledJobExpired(job);
 
   const handleBack = () => {
     if (isPastJob) {
