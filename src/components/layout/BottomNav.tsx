@@ -10,16 +10,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ isVisible = true }) => {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  // Display navbar on main tabs as well as Past Works, Notifications, and Saved Addresses
-  const isNavPage = [
-    '/', 
-    '/jobs', 
-    '/favourites', 
-    '/profile', 
-    '/past-jobs', 
-    '/notifications', 
-    '/addresses'
-  ].includes(currentPath);
+  const isNavPage = ['/', '/jobs', '/favourites', '/profile'].includes(currentPath);
 
   if (!isNavPage) return null;
 
@@ -28,7 +19,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ isVisible = true }) => {
       to: '/', 
       label: 'Home', 
       icon: Home,
-      isActive: currentPath === '/' || currentPath === '/notifications'
+      isActive: currentPath === '/'
     },
     { 
       to: '/jobs', 
@@ -46,7 +37,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ isVisible = true }) => {
       to: '/profile', 
       label: 'Profile', 
       icon: User,
-      isActive: currentPath === '/profile' || currentPath === '/past-jobs' || currentPath === '/addresses'
+      isActive: currentPath === '/profile'
     },
   ];
 
