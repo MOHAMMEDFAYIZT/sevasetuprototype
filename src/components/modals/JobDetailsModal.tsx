@@ -283,19 +283,19 @@ export const JobDetailsModal: React.FC = () => {
 
   return (
     <div 
-      className={`absolute inset-0 z-50 flex items-end justify-center bg-[rgba(15,40,28,0.45)] backdrop-blur-[5px] animate-fade-in transition-all duration-200 ${
-        isKeyboardOpen ? 'pb-[215px]' : 'pb-0'
+      className={`absolute inset-0 z-50 flex items-end justify-center bg-[rgba(10,35,22,0.45)] backdrop-blur-[4px] animate-fade-in transition-all duration-200 ${
+        isKeyboardOpen ? 'pb-[225px]' : 'pb-0'
       }`}
       onClick={handleClose}
     >
-      {/* Native Bottom Sheet touching phone sides */}
+      {/* Native Bottom Sheet touching phone sides as normal mobile modals */}
       <div 
         ref={sheetContentRef}
-        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-4 sm:p-5 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col max-h-full overflow-y-auto transition-all duration-200"
+        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] p-4 sm:p-5 shadow-[0_-12px_40px_rgba(10,50,30,0.25)] border-t border-[#E3ECE0] animate-slide-up flex flex-col max-h-[88%] overflow-y-auto scrollbar-none transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle pill */}
-        <div className="w-11 h-1 bg-[#CBD8CA] rounded-full mx-auto mb-3" />
+        <div className="w-11 h-1 bg-[#CBD8CA] rounded-full mx-auto mb-3 shrink-0" />
 
         {/* Compact Top Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -465,6 +465,7 @@ export const JobDetailsModal: React.FC = () => {
                 value={draftJob.description}
                 onChange={(e) => updateDraftJob({ description: e.target.value })}
                 onFocus={() => {
+                  (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = textareaRef.current;
                   openKeyboard();
                   setTimeout(() => {
                     textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });

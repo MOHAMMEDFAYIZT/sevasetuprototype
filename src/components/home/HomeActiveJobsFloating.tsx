@@ -5,7 +5,11 @@ import { WORKERS_DATABASE } from '../../data/mockData';
 import { isJobUrgent, getUrgentJobTimeRemaining } from '../../utils/urgency';
 import { CheckCircle2, Clock, Zap, RotateCcw } from 'lucide-react';
 
-export const HomeActiveJobsFloating: React.FC = () => {
+interface HomeActiveJobsFloatingProps {
+  isNavVisible?: boolean;
+}
+
+export const HomeActiveJobsFloating: React.FC<HomeActiveJobsFloatingProps> = ({ isNavVisible = true }) => {
   const { jobs, retryUrgentJob } = useApp();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -110,7 +114,11 @@ export const HomeActiveJobsFloating: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-[calc(70px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 pointer-events-none px-3.5 animate-slide-up">
+    <div 
+      className={`absolute left-0 right-0 z-30 pointer-events-none px-3.5 transition-transform duration-300 ease-out bottom-[calc(104px+env(safe-area-inset-bottom,0px))] ${
+        isNavVisible ? 'translate-y-0' : 'translate-y-[80px]'
+      }`}
+    >
       <div className="w-full max-w-[390px] mx-auto pointer-events-auto">
         <div
           ref={scrollRef}

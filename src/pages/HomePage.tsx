@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MOST_SEARCHED_SERVICES, OTHER_SERVICES } from '../data/mockData';
@@ -83,9 +83,11 @@ export const HomePage: React.FC = () => {
     user, 
     showToast,
     language,
-    setLanguage
+    setLanguage,
+    openKeyboard
   } = useApp();
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -191,7 +193,7 @@ export const HomePage: React.FC = () => {
   const totalResults = filteredMostSearched.length + filteredOtherServices.length;
 
   return (
-    <div className="w-full flex flex-col px-0 pt-2 pb-8">
+    <div className="w-full flex flex-col px-0 pt-2 pb-28">
       {/* Swiggy-Style Top Navigation Header */}
       <div className="px-5 pt-[max(12px,calc(env(safe-area-inset-top,0px)+8px))] pb-2 flex items-center justify-between select-none">
         {/* Left: Swiggy-Style Address Block */}
@@ -249,7 +251,12 @@ export const HomePage: React.FC = () => {
       {/* Modern Search Bar with Voice Search */}
       <div className="px-5 mt-7 mb-6">
         <div 
-          className={`relative flex items-center bg-white/95 rounded-[20px] border transition-all duration-200 shadow-[0_4px_16px_rgba(16,60,38,0.05)] ${
+          onClick={() => {
+            searchInputRef.current?.focus();
+            (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = searchInputRef.current;
+            openKeyboard();
+          }}
+          className={`relative flex items-center bg-white/95 rounded-[20px] border transition-all duration-200 shadow-[0_4px_16px_rgba(16,60,38,0.05)] cursor-text ${
             isSearchFocused 
               ? 'border-[#3AAA48] ring-3 ring-[#3AAA48]/15 bg-white shadow-sm' 
               : 'border-[#E3ECE0] hover:border-[#3AAA48]/50'
@@ -261,10 +268,19 @@ export const HomePage: React.FC = () => {
             }`} 
           />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
+            onFocus={() => {
+              setIsSearchFocused(true);
+              (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = searchInputRef.current;
+              openKeyboard();
+            }}
+            onClick={() => {
+              (window as unknown as { __sevaActiveInput?: HTMLElement | null }).__sevaActiveInput = searchInputRef.current;
+              openKeyboard();
+            }}
             onBlur={() => setIsSearchFocused(false)}
             placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
             className="w-full pl-11 pr-20 py-3.5 rounded-[20px] bg-transparent text-sm font-medium text-[#16261E] outline-none transition-all placeholder:text-[#76857D]"

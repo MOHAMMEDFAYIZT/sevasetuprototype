@@ -79,7 +79,7 @@ export const FavouritesPage: React.FC = () => {
     <div className="w-full flex-1 flex flex-col px-4 sm:px-5 pt-3 pb-24">
       
       {/* Page Header (Starts mt-22 from top, same as workers list & other pages) */}
-      <div className="flex items-center justify-between mt-22 mb-3.5 select-none">
+      <div className="flex items-center justify-between mt-13 mb-3.5 select-none">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
             Favourites

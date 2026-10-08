@@ -89,8 +89,8 @@ export const MyJobsPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-3.5 sm:px-4 pt-3 pb-32">
-      {/* Page Header (mt-22 from top) */}
-      <div className="mt-22 mb-3.5 select-none">
+      {/* Page Header (mt-13 from top) */}
+      <div className="mt-13 mb-3.5 select-none">
         <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
           My Jobs
         </h1>

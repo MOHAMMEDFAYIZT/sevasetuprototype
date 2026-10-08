@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { UserProfile, Job, AppScreen, Worker } from '../types';
 import { INITIAL_JOBS, WORKERS_DATABASE } from '../data/mockData';
 import { TRANSLATIONS, type Language } from '../utils/translations';
@@ -182,8 +182,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     category: string;
   } | null>(null);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const openKeyboard = () => setIsKeyboardOpen(true);
-  const closeKeyboard = () => setIsKeyboardOpen(false);
+  const openKeyboard = useCallback(() => setIsKeyboardOpen(true), []);
+  const closeKeyboard = useCallback(() => setIsKeyboardOpen(false), []);
 
   // Sync to localStorage
   useEffect(() => {

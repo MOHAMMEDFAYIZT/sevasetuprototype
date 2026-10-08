@@ -92,6 +92,11 @@ h1, h2, h3, h4, .fd {
   letter-spacing: -0.01em;
 }
 
+h1 { font-family: var(--fd); font-size: 24px; font-weight: 700; color: var(--ink); }
+h2 { font-family: var(--fd); font-size: 21px; font-weight: 600; color: var(--ink); }
+h3 { font-family: var(--fd); font-size: 18px; font-weight: 600; color: var(--ink); }
+h4 { font-family: var(--fd); font-size: 15px; font-weight: 600; color: var(--ink); }
+
 .font-display {
   font-family: var(--fd);
   letter-spacing: -0.01em;
@@ -100,6 +105,15 @@ h1, h2, h3, h4, .fd {
 .font-body {
   font-family: var(--fb);
 }
+
+/* Worker-aligned typography utilities */
+.muted { color: var(--ink2) !important; }
+.small { font-size: 13.5px; line-height: 1.45; }
+.tiny { font-size: 11.5px; }
+.b { font-weight: 600; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.flabel { display: flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.tlabel { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
 
 /* Mobile-first: 100% full screen native phone UI */
 .phone-frame {
@@ -428,4 +442,61 @@ h1, h2, h3, h4, .fd {
   background: #F6FAF4;
   border: 1px solid var(--line);
   border-radius: 18px;
+}
+
+/* Floating Navigation Bar (from seva_setu_customer_FINAL_v6 1.html) */
+.ss-navwrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding: 0 14px max(14px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 24px !important;
+  pointer-events: none;
+}
+.ss-nav {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 402px;
+  height: 70px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 7px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 60, 38, 0.14), 0 1px 2px rgba(16, 40, 25, 0.06);
+}
+.ss-navbtn {
+  flex: 1;
+  height: 56px;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink2);
+  transition: background 0.25s, color 0.25s, flex 0.25s;
+  text-decoration: none;
+  min-width: 0;
+}
+.ss-navbtn span {
+  white-space: nowrap;
+}
+.ss-navbtn:hover {
+  color: var(--ink);
+}
+.ss-navbtn.on {
+  background: var(--cta);
+  color: #ffffff;
+  flex: 1.3;
 }
