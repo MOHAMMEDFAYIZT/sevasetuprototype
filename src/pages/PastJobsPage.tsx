@@ -65,13 +65,13 @@ export const PastJobsPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-36 sm:pb-40 min-h-full relative">
-      {/* Back button at the top (exact match to WorkersListPage) */}
+      {/* Back button at the top - Always navigates to Profile tab */}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate('/profile')}
         className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
-        title="Go back"
-        aria-label="Go back"
+        title="Back to Profile"
+        aria-label="Back to Profile"
       >
         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
       </button>

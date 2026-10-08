@@ -347,12 +347,12 @@ export const MyJobsPage: React.FC = () => {
                       <div className="min-w-0 flex-1">
                         <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E] leading-tight truncate">
                           {isUrgentSearching && urgentInfo?.isExpired 
-                            ? 'No worker available right now' 
+                            ? 'No worker found' 
                             : `0 of ${job.requests.length || 1} workers accepted`}
                         </p>
                         <p className="text-[12px] sm:text-[13px] text-[#76857D] font-normal leading-tight mt-1 truncate">
                           {isUrgentSearching && urgentInfo?.isExpired 
-                            ? 'Tap Request Again to retry' 
+                            ? 'Tap to update & retry' 
                             : 'Waiting for workers to accept'}
                         </p>
                       </div>
@@ -368,7 +368,7 @@ export const MyJobsPage: React.FC = () => {
                         className="px-3 py-1.5 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-xs font-bold transition-all shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
                       >
                         <RotateCcw className="w-3 h-3 stroke-[2.2]" />
-                        <span>Request Again</span>
+                        <span>Retry</span>
                       </button>
                     ) : (
                       <ChevronRight className="w-5 h-5 text-[#8BA093] group-hover:text-[#0C6B44] transition-colors shrink-0 stroke-[2.2]" />

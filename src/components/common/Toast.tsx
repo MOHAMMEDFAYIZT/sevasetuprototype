@@ -44,7 +44,7 @@ export const Toast: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-[210px] sm:bottom-[215px] left-0 right-0 z-[70] flex justify-center px-4 pointer-events-none transition-all">
+    <div className="fixed bottom-[255px] sm:bottom-[265px] left-0 right-0 z-[70] flex justify-center px-4 pointer-events-none transition-all">
       <div className="w-full max-w-[380px] flex justify-center">
         <div
           onClick={hideToast}

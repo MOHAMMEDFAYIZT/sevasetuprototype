@@ -17,7 +17,8 @@ import {
   Pause,
   Volume2,
   Star,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 
 // Exact service illustrations used across HomePage and MyJobs
@@ -119,6 +120,8 @@ export const JobDetailsPage: React.FC = () => {
     openCompleteConfirmModal, 
     openRateModal,
     requestMoreWorkers,
+    openCreateJobModal,
+    retryUrgentJob,
     showToast
   } = useApp();
 
@@ -189,15 +192,25 @@ export const JobDetailsPage: React.FC = () => {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
+  const isPastJob = job.status === 'completed' || job.status === 'cancelled' || job.status === 'unfilled';
+
+  const handleBack = () => {
+    if (isPastJob) {
+      navigate('/past-jobs');
+    } else {
+      navigate('/jobs');
+    }
+  };
+
   return (
     <div className="w-full max-w-xl mx-auto flex-1 flex flex-col px-4 sm:px-5 pt-0 pb-36 sm:pb-40 min-h-full relative">
-      {/* Back button at the top - Always navigates back to My Jobs page */}
+      {/* Back button at the top - Navigates to Past Works for past jobs, or My Jobs for active jobs */}
       <button
         type="button"
-        onClick={() => navigate('/jobs')}
+        onClick={handleBack}
         className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 w-10 h-10 rounded-full glass flex items-center justify-center text-[#16261E] hover:text-[#0C6B44] transition-all cursor-pointer border border-white shadow-[0_2px_8px_rgba(16,60,38,0.06)] active:scale-95"
-        title="Back to My Jobs"
-        aria-label="Back to My Jobs"
+        title={isPastJob ? "Back to Past Works" : "Back to My Jobs"}
+        aria-label={isPastJob ? "Back to Past Works" : "Back to My Jobs"}
       >
         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
       </button>
@@ -501,8 +514,32 @@ export const JobDetailsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Slide-to-Cancel slider for active requests (Compact ~260px) */}
-        {isActive && (
+        {/* Book Again Action for Past Jobs (Completed or Cancelled) */}
+        {(isCompleted || isCancelled) && (
+          <button
+            type="button"
+            onClick={() => openCreateJobModal(job.category)}
+            className="w-full h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-bold text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(10,90,57,0.25)] transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4 stroke-[2.2]" />
+            <span>Book Again</span>
+          </button>
+        )}
+
+        {/* Retry Urgent Request if Expired */}
+        {isLooking && isUrgent && getUrgentJobTimeRemaining(job).isExpired && (
+          <button
+            type="button"
+            onClick={() => retryUrgentJob(job.id)}
+            className="w-full h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-bold text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(10,90,57,0.25)] transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4 stroke-[2.2]" />
+            <span>Retry Request</span>
+          </button>
+        )}
+
+        {/* Slide-to-Cancel slider for active requests (Compact ~260px) - hidden if expired */}
+        {isActive && (!isUrgent || !getUrgentJobTimeRemaining(job).isExpired) && (
           <SlideToCancel onCancel={handleCancelJob} />
         )}
 

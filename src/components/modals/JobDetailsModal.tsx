@@ -18,7 +18,8 @@ import {
   Plus,
   Check,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 
 const SERVICE_ILLUSTRATIONS: Record<string, string> = {
@@ -50,6 +51,7 @@ export const JobDetailsModal: React.FC = () => {
     selectedWorkerIds,
     setSelectedWorkerIds,
     createJobForWorker,
+    retryingJobId,
     user,
     isKeyboardOpen,
     openKeyboard,
@@ -312,6 +314,12 @@ export const JobDetailsModal: React.FC = () => {
               <p className="text-xs text-[#76857D] font-normal leading-snug mt-0.5">
                 Job details
               </p>
+              {retryingJobId && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full mt-1 border border-amber-200">
+                  <Zap className="w-2.5 h-2.5 fill-amber-600 text-amber-600" />
+                  <span>Retry Request #{retryingJobId}</span>
+                </span>
+              )}
               {targetWorker && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0C6B44] bg-[#E2F3DD] px-2 py-0.5 rounded-full mt-1 border border-[#3AAA48]/30">
                   <UserCheck className="w-2.5 h-2.5 text-[#0C6B44]" />
