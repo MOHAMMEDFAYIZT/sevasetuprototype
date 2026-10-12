@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { SelectLocationPage } from '../../pages/SelectLocationPage';
 
 const SERVICE_ILLUSTRATIONS: Record<string, string> = {
   'electrician': '/images/services/most-searched/electrician.png',
@@ -61,6 +62,7 @@ export const JobDetailsModal: React.FC = () => {
   const sheetContentRef = useRef<HTMLDivElement>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
   // Auto scroll textarea into visible center when keyboard activates
   useEffect(() => {
@@ -137,7 +139,9 @@ export const JobDetailsModal: React.FC = () => {
     for (let d = 1; d <= totalDays; d++) {
       const dateObj = new Date(year, month, d);
       dateObj.setHours(0, 0, 0, 0);
-      const dateStr = dateObj.toISOString().split('T')[0];
+      const mm = String(month + 1).padStart(2, '0');
+      const dd = String(d).padStart(2, '0');
+      const dateStr = `${year}-${mm}-${dd}`;
       const isPast = dateObj < today;
       const isToday = dateObj.getTime() === today.getTime();
 
@@ -164,6 +168,16 @@ export const JobDetailsModal: React.FC = () => {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [voiceDuration, setVoiceDuration] = useState('0:00');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isCreateJobModalOpen) {
+      setHasRecordedVoice(!!draftJob.hasVoiceNote);
+      setVoiceDuration(draftJob.voiceNoteDuration || '0:00');
+      setIsRecording(false);
+      setIsPlayingVoice(false);
+      setRecordSeconds(0);
+    }
+  }, [isCreateJobModalOpen, draftJob.hasVoiceNote, draftJob.voiceNoteDuration]);
 
   useEffect(() => {
     return () => {
@@ -349,9 +363,7 @@ export const JobDetailsModal: React.FC = () => {
             </div>
             <button
               type="button"
-              onClick={() => {
-                navigate('/addresses');
-              }}
+              onClick={() => setIsLocationPickerOpen(true)}
               className="text-[11px] font-bold text-[#0C6B44] bg-white hover:bg-[#E2F3DD] px-3 py-1 rounded-full border border-[#CBD8CA] cursor-pointer shrink-0 transition-colors shadow-2xs"
             >
               Change
@@ -487,10 +499,10 @@ export const JobDetailsModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={startRecording}
-                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer bg-white hover:bg-[#E2F3DD] text-[#76857D] hover:text-[#0C6B44] border border-[#E3ECE0]"
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer bg-[#E2F3DD] hover:bg-[#D2ECD6] text-[#0C6B44] border border-[#BDDEC4] shadow-2xs active:scale-95"
                       title="Record voice note"
                     >
-                      <Mic className="w-3.5 h-3.5 stroke-[2]" />
+                      <Mic className="w-3.5 h-3.5 stroke-[2.4]" />
                     </button>
                   )}
                 </div>
@@ -679,6 +691,16 @@ export const JobDetailsModal: React.FC = () => {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Real SelectLocationPage mounted directly above modal */}
+      {isLocationPickerOpen && (
+        <div className="absolute inset-0 z-70 bg-[#F4F9F4] animate-slide-up flex flex-col overflow-y-auto">
+          <SelectLocationPage 
+            isOverlay={true} 
+            onClose={() => setIsLocationPickerOpen(false)} 
+          />
         </div>
       )}
     </div>

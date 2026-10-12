@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import type { UserProfile, Job, AppScreen, Worker } from '../types';
 import { INITIAL_JOBS, WORKERS_DATABASE } from '../data/mockData';
 import { TRANSLATIONS, type Language } from '../utils/translations';
+import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
 
 interface DraftJob {
   category: string;
@@ -71,6 +72,7 @@ interface AppContextType {
   isCreateJobModalOpen: boolean;
   openCreateJobModal: (cat?: string) => void;
   openCreateJobModalFromJob: (job: Job) => void;
+  openEditDraftJobModal: () => void;
   closeCreateJobModal: () => void;
   isLocationModalOpen: boolean;
   openLocationModal: () => void;
@@ -146,14 +148,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     workersNeeded: 1
   });
 
-  const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([1, 2]);
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [favourites, setFavourites] = useState<number[]>([1, 10, 20]);
   const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('SEVA_SETU_JOBS_V7');
+    // Purge legacy storage keys to guarantee memory cleanup
+    [
+      'SEVA_SETU_JOBS',
+      'SEVA_SETU_JOBS_V2',
+      'SEVA_SETU_JOBS_V3',
+      'SEVA_SETU_JOBS_V4',
+      'SEVA_SETU_JOBS_V5',
+      'SEVA_SETU_JOBS_V6',
+      'SEVA_SETU_JOBS_V7',
+      'SEVA_SETU_JOBS_V8',
+      'SEVA_SETU_JOBS_V9',
+      'SEVA_SETU_JOBS_V10',
+      'SEVA_SETU_JOBS_PROD'
+    ].forEach(k => {
+      try { localStorage.removeItem(k); } catch { /* ignore */ }
+    });
+
+    const saved = localStorage.getItem('SEVA_SETU_JOBS_V11');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 8) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         // fallback
       }
@@ -192,7 +211,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('SEVA_SETU_JOBS_V7', JSON.stringify(jobs));
+    localStorage.setItem('SEVA_SETU_JOBS_V11', JSON.stringify(jobs));
   }, [jobs]);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -275,7 +294,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: draftJob.date,
       time: draftJob.time,
       location: draftJob.locationMode === 'saved' ? user.location : 'Current Location',
-      description: draftJob.description.trim() || `Requirement for ${draftJob.category}`,
+      description: draftJob.description.trim(),
       hasVoiceNote: draftJob.hasVoiceNote,
       voiceNoteDuration: draftJob.voiceNoteDuration,
       wage: `₹${draftJob.wageMin}–₹${draftJob.wageMax} / hr`,
@@ -335,7 +354,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         date: draftJob.date || new Date().toISOString().split('T')[0],
         time: '10:00 AM',
         location: draftJob.location || user.location || 'Saved Address',
-        description: draftJob.description.trim() || `Requirement for ${cat}`,
+        description: draftJob.description.trim(),
         wage: worker.wage,
         status: 'looking',
         requests: [{ workerId: worker.id, status: 'pending' }],
@@ -369,7 +388,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const finalDate = customParams?.date || draftJob.date || new Date().toISOString().split('T')[0];
     const finalLocation = customParams?.location || draftJob.location || user.location || 'Palakkad Town';
     const finalTime = customParams?.time || draftJob.time || '10:00 AM';
-    const finalDesc = customParams?.description || draftJob.description.trim() || `Direct request for ${worker.name}`;
+    const finalDesc = (customParams?.description ?? draftJob.description).trim();
 
     const newJob: Job = {
       id: Date.now(),
@@ -614,24 +633,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const openCreateJobModal = (cat?: string) => {
-    if (cat) {
-      setSelectedCategory(cat);
-      setSelectedWorkerIds([]);
-      setDraftJob(prev => ({
-        ...prev,
-        category: cat,
-        date: prev.date || new Date().toISOString().split('T')[0],
-        time: prev.time || '10:00 AM',
-        location: prev.locationMode === 'current' ? prev.location : (user.location || 'Palakkad Town'),
-        workersNeeded: prev.workersNeeded || 1
-      }));
+    const finalCategory = cat || selectedCategory || 'Electrician';
+
+    // Prevent duplicate urgent jobs for the same service
+    const existingUrgentJob = jobs.find(j =>
+      j.category.toLowerCase() === finalCategory.toLowerCase() &&
+      isJobUrgent(j) &&
+      (j.status === 'looking' || j.status === 'matched')
+    );
+
+    if (existingUrgentJob) {
+      const { isExpired } = getUrgentJobTimeRemaining(existingUrgentJob);
+      if (!isExpired) {
+        // Active in 3-min window -> Toast and do not create duplicate
+        showToast(`⚡ Active urgent request already in progress for ${existingUrgentJob.category}!`);
+        return;
+      } else {
+        // Expired -> Act exactly like Retry
+        openCreateJobModalFromJob(existingUrgentJob);
+        return;
+      }
     }
+
+    setSelectedCategory(finalCategory);
+    setSelectedWorkerIds([]);
+    setDraftJob(prev => ({
+      category: finalCategory,
+      date: new Date().toISOString().split('T')[0],
+      time: '10:00 AM',
+      timeSlot: 'morning',
+      location: prev.locationMode === 'current' ? prev.location : (user.location || 'Palakkad Town'),
+      locationMode: prev.locationMode || 'saved',
+      description: '',
+      wageMin: 350,
+      wageMax: 500,
+      hasVoiceNote: false,
+      voiceNoteDuration: undefined,
+      workersNeeded: 1
+    }));
     setIsCreateJobModalOpen(true);
   };
 
   const openCreateJobModalFromJob = (job: Job) => {
     setSelectedCategory(job.category);
-    setSelectedWorkerIds(job.requests.map(r => r.workerId));
+    // Keep worker IDs empty so retry follows the standard multi-worker booking flow instead of locking to a single worker
+    setSelectedWorkerIds([]);
+    let cleanDesc = job.description || '';
+    if (
+      cleanDesc.startsWith('Requirement for ') || 
+      cleanDesc.startsWith('Direct request for ')
+    ) {
+      cleanDesc = '';
+    }
     setDraftJob({
       category: job.category,
       date: new Date().toISOString().split('T')[0], // retry urgent is for today
@@ -639,13 +692,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timeSlot: 'morning',
       location: job.location || user.location || 'Palakkad Town',
       locationMode: 'saved',
-      description: job.description || '',
+      description: cleanDesc,
       wageMin: 350,
       wageMax: 500,
       hasVoiceNote: job.hasVoiceNote,
       voiceNoteDuration: job.voiceNoteDuration,
       workersNeeded: Math.max(1, job.requests.length)
     });
+    setIsCreateJobModalOpen(true);
+  };
+
+  const openEditDraftJobModal = () => {
     setIsCreateJobModalOpen(true);
   };
 
@@ -686,7 +743,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetDemoData = () => {
     localStorage.removeItem('SEVA_SETU_USER_PROD');
-    localStorage.removeItem('SEVA_SETU_JOBS_PROD');
+    localStorage.removeItem('SEVA_SETU_JOBS_V11');
     setUser({
       name: 'Manoj Kumar',
       phone: '9876543210',
@@ -747,6 +804,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isCreateJobModalOpen,
         openCreateJobModal,
         openCreateJobModalFromJob,
+        openEditDraftJobModal,
         closeCreateJobModal,
         isLocationModalOpen,
         openLocationModal,

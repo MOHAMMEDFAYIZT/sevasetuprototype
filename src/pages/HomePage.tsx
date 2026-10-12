@@ -6,7 +6,7 @@ import {
   Search, 
   X, 
   ChevronRight, 
-  Languages, 
+  Globe, 
   Bell, 
   Check, 
   Mic
@@ -223,7 +223,7 @@ export const HomePage: React.FC = () => {
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 border border-[#E3ECE0] shadow-[0_2px_8px_rgba(16,60,38,0.06)] hover:bg-[#F6FAF4] hover:border-[#3AAA48]/50 text-[#16261E] active:scale-95 transition-all cursor-pointer"
             title="Change language / भाषा चुनें"
           >
-            <Languages className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2.2]" />
+            <Globe className="w-3.5 h-3.5 text-[#0C6B44] stroke-[2]" />
             <span className="text-[11px] font-bold text-[#0A5A39]">
               {language === 'hi' ? 'हिन्दी' : 'EN'}
             </span>

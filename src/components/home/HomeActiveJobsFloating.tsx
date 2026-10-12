@@ -37,50 +37,16 @@ export const HomeActiveJobsFloating: React.FC<HomeActiveJobsFloatingProps> = ({ 
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Active jobs: status is 'looking' or 'matched', and scheduled date is not in the past
-  const validActiveJobs = jobs.filter(j => 
-    (j.status === 'looking' || j.status === 'matched') &&
-    (j.date ? j.date.split('T')[0] >= todayStr : true)
-  );
-
-  // 2-DAY RULE IMPLEMENTATION:
-  // - Extract all distinct dates that have active jobs on or after today
-  // - If today has active jobs: target dates are [Today, next 1 upcoming date]
-  // - If today has NO active jobs: target dates are [1st upcoming date, 2nd upcoming date]
-  const hasJobsToday = validActiveJobs.some(j => (j.date?.split('T')[0] || todayStr) === todayStr);
-
-  const futureDistinctDates = Array.from(
-    new Set(
-      validActiveJobs
-        .map(j => j.date?.split('T')[0] || todayStr)
-        .filter(d => d > todayStr)
-    )
-  ).sort();
-
-  let targetDates: string[] = [];
-  if (hasJobsToday) {
-    // Today + next 1 upcoming date
-    targetDates = [todayStr];
-    if (futureDistinctDates.length > 0) {
-      targetDates.push(futureDistinctDates[0]);
-    }
-  } else {
-    // 2 upcoming dates
-    targetDates = futureDistinctDates.slice(0, 2);
-  }
-
-  // Filter jobs belonging ONLY to the target dates
-  const activeJobs = validActiveJobs
+  // Floating cards on homepage show ONLY today's and urgent requests (searching or matched for today)
+  const activeJobs = jobs
     .filter(j => {
-      const jobDate = j.date?.split('T')[0] || todayStr;
-      return targetDates.includes(jobDate);
+      if (j.status !== 'looking' && j.status !== 'matched') return false;
+      const isToday = (j.date?.split('T')[0] || todayStr) === todayStr;
+      const isUrgent = isJobUrgent(j);
+      return isToday || isUrgent;
     })
     .sort((a, b) => {
-      const aDate = a.date?.split('T')[0] || todayStr;
-      const bDate = b.date?.split('T')[0] || todayStr;
-      if (aDate !== bDate) return aDate.localeCompare(bDate);
-
-      // Within the same day: urgent looking jobs first, then by time
+      // Urgent looking jobs first, then by time
       const aUrgent = isJobUrgent(a) && a.status === 'looking' ? 1 : 0;
       const bUrgent = isJobUrgent(b) && b.status === 'looking' ? 1 : 0;
       if (aUrgent !== bUrgent) return bUrgent - aUrgent;

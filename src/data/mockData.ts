@@ -461,6 +461,28 @@ export const WORKERS_DATABASE: Worker[] = [
     about: 'Grass trimming, lawn leveling, flower bed pruning, and vegetable garden care.'
   },
   { 
+    id: 53, 
+    name: 'Velusamy K.', 
+    category: 'Gardening', 
+    rating: 4.7, 
+    reviewsCount: 22, 
+    completedJobsCount: 22,
+    distance: 6.0, 
+    wage: '₹180/hr', 
+    dailyWage: '₹700/day',
+    serviceWages: {
+      'Gardening': { hourly: '₹180/hr', daily: '₹700/day' }
+    },
+    badgeTier: 'Silver',
+    badgePoints: 310,
+    phone: '+91 94465 77889', 
+    initial: 'V',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&auto=format&fit=crop&q=80',
+    skills: ['Gardening'],
+    matchedSkill: 'Gardening',
+    about: 'Lawn mower operator, hedge trimmer, and ornamental garden upkeep specialist.'
+  },
+  { 
     id: 20, 
     name: 'Gopalan K.', 
     category: 'Farm Work', 
@@ -525,6 +547,28 @@ export const WORKERS_DATABASE: Worker[] = [
     skills: ['Mechanic'],
     matchedSkill: 'Mechanic',
     about: 'Two-wheeler and pump motor specialist. Available for doorstep carburetor, brake, and electrical checks.'
+  },
+  { 
+    id: 61, 
+    name: 'Pradeep K.', 
+    category: 'Mechanic', 
+    rating: 4.8, 
+    reviewsCount: 31, 
+    completedJobsCount: 31,
+    distance: 5.1, 
+    wage: '₹240/hr', 
+    dailyWage: '₹900/day',
+    serviceWages: {
+      'Mechanic': { hourly: '₹240/hr', daily: '₹900/day' }
+    },
+    badgeTier: 'Gold',
+    badgePoints: 620,
+    phone: '+91 94472 66778', 
+    initial: 'P',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
+    skills: ['Mechanic'],
+    matchedSkill: 'Mechanic',
+    about: 'Experienced two-wheeler mechanic for scooter service, self-start troubleshooting, and battery maintenance.'
   },
   { 
     id: 70, 
@@ -593,6 +637,28 @@ export const WORKERS_DATABASE: Worker[] = [
     about: 'Experienced cattle feeder, milker, and goat shed manager assisting local rural farms.'
   },
   { 
+    id: 91, 
+    name: 'Devadasan', 
+    category: 'Animal Care', 
+    rating: 4.6, 
+    reviewsCount: 18, 
+    completedJobsCount: 18,
+    distance: 5.8, 
+    wage: '₹150/hr', 
+    dailyWage: '₹600/day',
+    serviceWages: {
+      'Animal Care': { hourly: '₹150/hr', daily: '₹600/day' }
+    },
+    badgeTier: 'Bronze',
+    badgePoints: 190,
+    phone: '+91 94479 11223', 
+    initial: 'D',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
+    skills: ['Animal Care'],
+    matchedSkill: 'Animal Care',
+    about: 'Dairy farm helper, cattle feed preparer, and shed maintenance assistant.'
+  },
+  { 
     id: 95, 
     name: 'Muthuvel K.', 
     category: 'General Labour', 
@@ -639,121 +705,7 @@ export const WORKERS_DATABASE: Worker[] = [
 ];
 
 export const INITIAL_JOBS: Job[] = [
-  // 1. URGENT TODAY - Matched (Multiple workers confirmed, with voice note)
-  {
-    id: 101,
-    category: 'Electrician',
-    date: new Date().toISOString().split('T')[0],
-    time: '04:00 PM',
-    location: 'Kalpathy, Palakkad',
-    description: 'Replace 2 ceiling fans & inspect main distribution board wiring.',
-    hasVoiceNote: true,
-    voiceNoteDuration: '0:18',
-    wage: '₹200/hr',
-    status: 'matched',
-    requests: [
-      { workerId: 1, status: 'accepted' },
-      { workerId: 2, status: 'accepted' },
-      { workerId: 3, status: 'pending' },
-      { workerId: 4, status: 'accepted' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 45000).toISOString() // 45 seconds ago
-  },
-
-  // 2. URGENT TODAY - Looking (Actively searching within 3-min window)
-  {
-    id: 105,
-    category: 'Plumber',
-    date: new Date().toISOString().split('T')[0],
-    time: '05:30 PM',
-    location: 'Civil Station Rd, Fort Maidan',
-    description: 'Main overhead water tank outlet pipe leaking near the bathroom connector.',
-    hasVoiceNote: true,
-    voiceNoteDuration: '0:12',
-    wage: '₹220/hr',
-    status: 'looking',
-    requests: [
-      { workerId: 10, status: 'pending' },
-      { workerId: 11, status: 'pending' },
-      { workerId: 12, status: 'pending' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 85000).toISOString() // 1m 25s elapsed, ~1m 35s remaining
-  },
-
-  // 3. URGENT TODAY - Expired (> 3 minutes, displays Retry button on floating card & My Jobs)
-  {
-    id: 108,
-    category: 'Mechanic',
-    date: new Date().toISOString().split('T')[0],
-    time: '02:00 PM',
-    location: 'Sultanpet, Palakkad Town',
-    description: 'Activa 6G self-start not responding, kick lever jammed.',
-    wage: '₹250/hr',
-    status: 'looking',
-    requests: [
-      { workerId: 50, status: 'pending' },
-      { workerId: 51, status: 'pending' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 240000).toISOString() // 4 minutes ago (Expired!)
-  },
-
-  // 4. SCHEDULED TOMORROW - Matched (Agricultural harvesting, 2 workers confirmed)
-  {
-    id: 102,
-    category: 'Farm Work',
-    date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    time: '08:30 AM',
-    location: 'Chittur Road, Palakkad',
-    description: 'Harvesting coconut trees and clearing the farm irrigation channel.',
-    wage: '₹850/day',
-    status: 'matched',
-    requests: [
-      { workerId: 20, status: 'accepted' },
-      { workerId: 21, status: 'accepted' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 3600000).toISOString()
-  },
-
-  // 5. SCHEDULED TOMORROW - Matched (Boutique tailor stitching)
-  {
-    id: 104,
-    category: 'Tailor',
-    date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    time: '11:00 AM',
-    location: 'Civil Station, Palakkad',
-    description: 'Traditional Kerala saree blouse stitching and kurti alterations.',
-    wage: '₹200/piece',
-    status: 'matched',
-    requests: [
-      { workerId: 98, status: 'accepted' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 7200000).toISOString()
-  },
-
-  // 6. SCHEDULED 2 DAYS LATER (Beyond the 2-day window for floating card when today has jobs, visible in My Jobs)
-  {
-    id: 109,
-    category: 'Gardening',
-    date: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-    time: '09:00 AM',
-    location: 'Kallekkad, Palakkad',
-    description: 'Lawn grass trimming, rose garden pruning, and organic fertilizer application.',
-    wage: '₹600/day',
-    status: 'looking',
-    requests: [
-      { workerId: 60, status: 'pending' },
-      { workerId: 61, status: 'pending' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 1800000).toISOString()
-  },
-
-  // 7. PAST WORK - Completed with 5-star rating
+  // 1. PAST WORK - Completed with 5-star rating
   {
     id: 103,
     category: 'Cleaning',
@@ -770,7 +722,7 @@ export const INITIAL_JOBS: Job[] = [
     createdAt: new Date(Date.now() - 3 * 86400000).toISOString()
   },
 
-  // 8. PAST WORK - Completed pending customer rating (Shows "Rate Service" CTA)
+  // 2. PAST WORK - Completed pending customer rating (Shows "Rate Service" CTA)
   {
     id: 106,
     category: 'Carpenter',
@@ -785,40 +737,5 @@ export const INITIAL_JOBS: Job[] = [
     ],
     rating: null,
     createdAt: new Date(Date.now() - 86400000).toISOString()
-  },
-
-  // 9. PAST WORK - Cancelled by user
-  {
-    id: 107,
-    category: 'Painter',
-    date: new Date(Date.now() - 5 * 86400000).toISOString().split('T')[0],
-    time: '10:00 AM',
-    location: 'Palakkad Town',
-    description: 'Exterior boundary wall white-wash and gate enamel painting.',
-    wage: '₹800/day',
-    status: 'cancelled',
-    requests: [
-      { workerId: 45, status: 'cancelled' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString()
-  },
-
-  // 10. PAST WORK - Unfilled (No worker was available in the area)
-  {
-    id: 110,
-    category: 'Animal Care',
-    date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
-    time: '06:30 AM',
-    location: 'Kuzhalmannam, Palakkad',
-    description: 'Milking and cattle shed washing assistant for 4 cows.',
-    wage: '₹400/shift',
-    status: 'unfilled',
-    requests: [
-      { workerId: 80, status: 'rejected' },
-      { workerId: 81, status: 'rejected' }
-    ],
-    rating: null,
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString()
   }
 ];

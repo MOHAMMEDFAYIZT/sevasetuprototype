@@ -17,7 +17,7 @@ import {
   Pause,
   Volume2,
   Star,
-  ChevronRight,
+  X,
   RotateCcw
 } from 'lucide-react';
 
@@ -49,13 +49,11 @@ const getServiceIllustration = (category: string) => {
   return '/images/services/most-searched/electrician.png';
 };
 
-// Compact, intuitive Slide-to-Cancel slider component
+// Full-width, prominent Slide-to-Cancel slider matching worker-green-v5.html (.slidecx / .sc-track)
 const SlideToCancel: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
   const [sliderPosition, setSliderPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
-
-  const maxSlide = 210; // comfortable slide distance
 
   const handleStart = () => {
     setIsDragging(true);
@@ -64,13 +62,16 @@ const SlideToCancel: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
   const handleMove = (clientX: number) => {
     if (!isDragging || !trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
-    const newPos = Math.max(0, Math.min(clientX - rect.left - 20, maxSlide));
+    const maxSlide = rect.width - 56; // 48px knob + 8px padding
+    const newPos = Math.max(0, Math.min(clientX - rect.left - 24, maxSlide));
     setSliderPosition(newPos);
   };
 
   const handleEnd = () => {
-    if (!isDragging) return;
+    if (!isDragging || !trackRef.current) return;
     setIsDragging(false);
+    const rect = trackRef.current.getBoundingClientRect();
+    const maxSlide = rect.width - 56;
     if (sliderPosition >= maxSlide * 0.8) {
       setSliderPosition(maxSlide);
       onCancel();
@@ -80,29 +81,37 @@ const SlideToCancel: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
   };
 
   return (
-    <div className="flex flex-col items-center pt-2 select-none">
+    <div className="w-full pt-1 select-none">
       <div 
         ref={trackRef}
-        className="w-[260px] h-11 rounded-full bg-rose-50 border border-rose-200 relative flex items-center px-1 overflow-hidden shadow-2xs"
+        className="w-full h-14 rounded-full bg-[#FDECEA] border border-[#F4C6C0] relative flex items-center px-1 overflow-hidden shadow-2xs select-none"
         onTouchMove={(e) => handleMove(e.touches[0].clientX)}
         onTouchEnd={handleEnd}
         onMouseMove={(e) => isDragging && handleMove(e.clientX)}
         onMouseUp={handleEnd}
         onMouseLeave={handleEnd}
       >
-        {/* Track label */}
-        <span className="w-full text-center text-[11px] font-bold text-rose-500 tracking-wide pointer-events-none pl-6">
-          Slide to cancel request ❯❯
+        {/* Dynamic fill behind slider knob */}
+        <div 
+          style={{ width: `${sliderPosition + 52}px` }}
+          className="absolute left-0 top-0 bottom-0 bg-[#F9D3CE] rounded-full pointer-events-none transition-[width] duration-75"
+        />
+
+        {/* Track label matching worker app */}
+        <span className="w-full text-center text-sm font-bold text-[#D3362B] tracking-wide pointer-events-none pl-8 flex items-center justify-center gap-1.5 z-0">
+          <span>Slide to cancel request</span>
+          <span className="opacity-60 tracking-tighter text-base font-normal">›››</span>
         </span>
 
-        {/* Drag handle thumb */}
+        {/* Drag handle knob: 48px with X icon and subtle pulse matching worker-green-v5 */}
         <div 
           style={{ transform: `translateX(${sliderPosition}px)` }}
           onMouseDown={handleStart}
           onTouchStart={handleStart}
-          className="absolute left-1 w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md cursor-grab active:cursor-grabbing transition-transform"
+          className="absolute left-1 w-12 h-12 rounded-full bg-[#D3362B] text-white flex items-center justify-center shadow-[0_4px_12px_rgba(211,54,43,0.35)] cursor-grab active:cursor-grabbing transition-transform z-10"
+          title="Drag to cancel request"
         >
-          <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+          <X className="w-5 h-5 stroke-[2.4]" />
         </div>
       </div>
     </div>
@@ -121,7 +130,7 @@ export const JobDetailsPage: React.FC = () => {
     openRateModal,
     requestMoreWorkers,
     openCreateJobModal,
-    retryUrgentJob,
+    openCreateJobModalFromJob,
     showToast
   } = useApp();
 
@@ -530,7 +539,10 @@ export const JobDetailsPage: React.FC = () => {
         {isLooking && isUrgent && getUrgentJobTimeRemaining(job).isExpired && (
           <button
             type="button"
-            onClick={() => retryUrgentJob(job.id)}
+            onClick={() => {
+              navigate('/');
+              openCreateJobModalFromJob(job);
+            }}
             className="w-full h-12 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white font-display font-bold text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(10,90,57,0.25)] transition-all active:scale-[0.98] cursor-pointer"
           >
             <RotateCcw className="w-4 h-4 stroke-[2.2]" />
@@ -538,7 +550,7 @@ export const JobDetailsPage: React.FC = () => {
           </button>
         )}
 
-        {/* Slide-to-Cancel slider for active requests (Compact ~260px) - hidden if expired */}
+        {/* Slide-to-Cancel slider: only for live active requests, strictly hidden if expired */}
         {isActive && (!isUrgent || !getUrgentJobTimeRemaining(job).isExpired) && (
           <SlideToCancel onCancel={handleCancelJob} />
         )}

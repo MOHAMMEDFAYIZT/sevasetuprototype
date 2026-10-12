@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { WORKERS_DATABASE } from '../data/mockData';
 import { isJobUrgent, getUrgentJobTimeRemaining, isScheduledJobExpired } from '../utils/urgency';
 import { 
   CheckCircle2, 
@@ -40,22 +39,17 @@ const getServiceIllustration = (category: string) => {
   return '/images/services/most-searched/electrician.png';
 };
 
-const DEFAULT_AVATARS = [
-  '/images/workers/rajesh.jpg',
-  '/images/workers/gopalan.jpg',
-  '/images/workers/parvathy.jpg'
-];
 
 export const MyJobsPage: React.FC = () => {
   const { 
     jobs, 
     openJobDetails,
-    retryUrgentJob
+    openCreateJobModalFromJob
   } = useApp();
   const navigate = useNavigate();
 
-  // Matched is primary tab (first), Pending is secondary
-  const [activeTab, setActiveTab] = useState<'matched' | 'pending'>('matched');
+  // Pending is primary tab (first), Matched is secondary
+  const [activeTab, setActiveTab] = useState<'pending' | 'matched'>('pending');
 
   // Live ticker for urgent job countdown timers
   const [, setTicker] = useState(0);
@@ -64,10 +58,20 @@ export const MyJobsPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const pendingJobs = jobs.filter(j => j.status === 'looking' && !isScheduledJobExpired(j));
-  const matchedJobs = jobs.filter(j => j.status === 'matched' && !isScheduledJobExpired(j));
+  const isFullyMatched = (j: typeof jobs[0]) => {
+    if (j.status !== 'matched') return false;
+    const acceptedCount = j.requests.filter(r => r.status === 'accepted').length;
+    const needed = j.requests.length || 1;
+    return acceptedCount >= needed;
+  };
 
-  const displayedJobs = activeTab === 'matched' ? matchedJobs : pendingJobs;
+  // Matched tab strictly holds fully confirmed jobs (n of n)
+  const matchedJobs = jobs.filter(j => !isScheduledJobExpired(j) && isFullyMatched(j));
+
+  // Pending tab holds looking jobs OR partially matched jobs (e.g. 2 of 3 accepted)
+  const pendingJobs = jobs.filter(j => !isScheduledJobExpired(j) && (j.status === 'looking' || (j.status === 'matched' && !isFullyMatched(j))));
+
+  const displayedJobs = activeTab === 'pending' ? pendingJobs : matchedJobs;
 
   const handleJobCardClick = (jobId: number) => {
     openJobDetails(jobId);
@@ -99,29 +103,9 @@ export const MyJobsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Fully Rounded Continuous Segmented Tab: Matched first, Pending second */}
+      {/* Fully Rounded Continuous Segmented Tab: Pending first, Matched second */}
       <div className="flex w-full h-8 sm:h-8.5 p-0.5 rounded-full bg-white border border-[#CBD8CA] mb-4 select-none">
-        {/* Matched Tab (First) */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('matched')}
-          className={`flex-1 h-full rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            activeTab === 'matched'
-              ? 'bg-[#0C6B44] text-white font-bold shadow-2xs'
-              : 'text-[#16261E] hover:text-[#0C6B44]'
-          }`}
-        >
-          <span>Matched</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-            activeTab === 'matched'
-              ? 'bg-white/20 text-white'
-              : 'bg-[#E2F3DD] text-[#0C6B44]'
-          }`}>
-            {matchedJobs.length}
-          </span>
-        </button>
-
-        {/* Pending Tab (Second) */}
+        {/* Pending Tab (First) */}
         <button
           type="button"
           onClick={() => setActiveTab('pending')}
@@ -138,6 +122,26 @@ export const MyJobsPage: React.FC = () => {
               : 'bg-[#E2F3DD] text-[#0C6B44]'
           }`}>
             {pendingJobs.length}
+          </span>
+        </button>
+
+        {/* Matched Tab (Second) */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('matched')}
+          className={`flex-1 h-full rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            activeTab === 'matched'
+              ? 'bg-[#0C6B44] text-white font-bold shadow-2xs'
+              : 'text-[#16261E] hover:text-[#0C6B44]'
+          }`}
+        >
+          <span>Matched</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+            activeTab === 'matched'
+              ? 'bg-white/20 text-white'
+              : 'bg-[#E2F3DD] text-[#0C6B44]'
+          }`}>
+            {matchedJobs.length}
           </span>
         </button>
       </div>
@@ -172,12 +176,7 @@ export const MyJobsPage: React.FC = () => {
         <div className="space-y-4">
           {displayedJobs.map(job => {
             const acceptedReqs = job.requests.filter(r => r.status === 'accepted');
-            const matchedWorkers = acceptedReqs
-              .map(r => WORKERS_DATABASE.find(w => w.id === r.workerId))
-              .filter((w): w is NonNullable<typeof w> => Boolean(w));
-            
             const serviceImg = getServiceIllustration(job.category);
-            const isMultipleWorkers = matchedWorkers.length > 1;
 
             // Urgent styling ONLY applies when actively searching (pending)
             const isUrgentSearching = activeTab === 'pending' && isJobUrgent(job);
@@ -245,87 +244,15 @@ export const MyJobsPage: React.FC = () => {
 
                 {/* Tier 2: Bottom Status Row */}
                 {activeTab === 'matched' ? (
-                  isMultipleWorkers ? (
-                    /* 2+ Workers: Deeply layered avatars within slot + Text + Chevron */
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        {/* Avatar Slot: Centered 62px baseline */}
-                        <div className="w-[62px] shrink-0 flex items-center justify-center">
-                          <div className={`flex ${matchedWorkers.length > 3 ? '-space-x-[24px]' : matchedWorkers.length === 3 ? '-space-x-[20px]' : '-space-x-[12px]'} overflow-hidden shrink-0`}>
-                            {matchedWorkers.slice(0, 3).map((w, idx) => (
-                              <img
-                                key={w.id}
-                                src={w.avatar || DEFAULT_AVATARS[idx % DEFAULT_AVATARS.length]}
-                                alt={w.name}
-                                className="inline-block w-[34px] h-[34px] rounded-full ring-2 ring-white object-cover shadow-2xs"
-                              />
-                            ))}
-                            {matchedWorkers.length > 3 && (
-                              <div className="w-[34px] h-[34px] rounded-full bg-[#EAF6ED] text-[#0C6B44] ring-2 ring-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs">
-                                +{matchedWorkers.length - 3}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Text Details: Starts at the exact same column */}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E] leading-tight truncate">
-                            {matchedWorkers.length} of {Math.max(job.requests.length, matchedWorkers.length)} workers accepted
-                          </p>
-                          <p className="text-[12px] sm:text-[13px] text-[#76857D] font-normal leading-tight mt-1 truncate">
-                            Tap to view details & contact
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="w-5 h-5 text-[#8BA093] group-hover:text-[#0C6B44] transition-colors shrink-0 stroke-[2.2]" />
+                  /* Matched Tab: Clean dedicated View Details button */
+                  <div className="flex items-center justify-end">
+                    <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#E2F3DD] group-hover:bg-[#0C6B44] text-[#0C6B44] group-hover:text-white font-display text-xs font-bold transition-all shadow-2xs">
+                      <span>View Details</span>
+                      <ChevronRight className="w-3.5 h-3.5 stroke-[2.2] group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                  ) : matchedWorkers.length === 1 ? (
-                    /* Exactly 1 Worker: Centered 34px avatar in 62px slot + Text + Chevron */
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        {/* Avatar Slot: Centered 62px baseline */}
-                        <div className="w-[62px] shrink-0 flex items-center justify-center">
-                          <img
-                            src={matchedWorkers[0].avatar || DEFAULT_AVATARS[0]}
-                            alt={matchedWorkers[0].name}
-                            className="w-[34px] h-[34px] rounded-full ring-2 ring-white object-cover shadow-2xs shrink-0"
-                          />
-                        </div>
-
-                        {/* Text Details: Starts at the exact same column */}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E] leading-tight truncate">
-                            {job.requests.length > 1 
-                              ? `1 of ${job.requests.length} workers accepted` 
-                              : '1 of 1 worker accepted'}
-                          </p>
-                          <p className="text-[12px] sm:text-[13px] text-[#76857D] font-normal leading-tight mt-1 truncate">
-                            Tap to view details & contact
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="w-5 h-5 text-[#8BA093] group-hover:text-[#0C6B44] transition-colors shrink-0 stroke-[2.2]" />
-                    </div>
-                  ) : (
-                    /* Fallback */
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="w-[62px] shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E]">
-                          0 of {job.requests.length || 1} workers accepted
-                        </p>
-                        <p className="text-[12px] sm:text-[13px] text-[#76857D] mt-0.5">
-                          Waiting for workers to accept
-                        </p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-[#8BA093] group-hover:text-[#0C6B44] transition-colors shrink-0 stroke-[2.2]" />
-                    </div>
-                  )
+                  </div>
                 ) : (
-                  /* Pending Tab: Centered Clock in 62px slot + Text + Action/Chevron */
+                  /* Pending Tab: Centered Clock/Check in 62px slot + Text + Action/Chevron */
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Icon Slot: Centered 62px baseline */}
@@ -333,10 +260,14 @@ export const MyJobsPage: React.FC = () => {
                         <div className={`w-[34px] h-[34px] rounded-full border flex items-center justify-center shrink-0 ${
                           isUrgentSearching && urgentInfo?.isExpired
                             ? 'bg-amber-100 border-amber-300 text-amber-800'
-                            : 'bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]'
+                            : acceptedReqs.length > 0
+                              ? 'bg-[#E2F3DD] border-[#BDDEC4] text-[#0C6B44]'
+                              : 'bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]'
                         }`}>
                           {isUrgentSearching && urgentInfo?.isExpired ? (
                             <RotateCcw className="w-4 h-4 text-amber-800" />
+                          ) : acceptedReqs.length > 0 ? (
+                            <CheckCircle2 className="w-4 h-4 text-[#0C6B44]" />
                           ) : (
                             <Clock className="w-4 h-4 text-[#B45309]" />
                           )}
@@ -348,12 +279,14 @@ export const MyJobsPage: React.FC = () => {
                         <p className="font-display font-semibold text-[14px] sm:text-[15px] text-[#16261E] leading-tight truncate">
                           {isUrgentSearching && urgentInfo?.isExpired 
                             ? 'No worker found' 
-                            : `0 of ${job.requests.length || 1} workers accepted`}
+                            : `${acceptedReqs.length} of ${job.requests.length || 1} workers accepted`}
                         </p>
                         <p className="text-[12px] sm:text-[13px] text-[#76857D] font-normal leading-tight mt-1 truncate">
                           {isUrgentSearching && urgentInfo?.isExpired 
                             ? 'Tap to update & retry' 
-                            : 'Waiting for workers to accept'}
+                            : acceptedReqs.length > 0
+                              ? 'Waiting for remaining workers'
+                              : 'Waiting for workers to accept'}
                         </p>
                       </div>
                     </div>
@@ -363,7 +296,8 @@ export const MyJobsPage: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          retryUrgentJob(job.id);
+                          navigate('/');
+                          openCreateJobModalFromJob(job);
                         }}
                         className="px-3 py-1.5 rounded-full bg-[#0C6B44] hover:bg-[#0A5A39] text-white text-xs font-bold transition-all shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
                       >

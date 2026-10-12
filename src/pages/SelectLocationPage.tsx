@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { 
   ChevronLeft, 
@@ -39,9 +39,16 @@ const REAL_SEARCH_SUGGESTIONS = [
   { name: 'Chandranagar Colony', area: 'Near Bypass Junction, Palakkad 678007' }
 ];
 
-export const SelectLocationPage: React.FC = () => {
-  const { user, updateUser, updateDraftJob, showToast } = useApp();
+interface SelectLocationPageProps {
+  onClose?: () => void;
+  isOverlay?: boolean;
+}
+
+export const SelectLocationPage: React.FC<SelectLocationPageProps> = ({ onClose, isOverlay }) => {
+  const { user, updateUser, updateDraftJob, openCreateJobModal, showToast } = useApp();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnToModal = searchParams.get('returnToModal') === 'true';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -80,11 +87,24 @@ export const SelectLocationPage: React.FC = () => {
     }
   ]);
 
+  const finishLocationSelection = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+    if (returnToModal) {
+      navigate('/');
+      setTimeout(() => openCreateJobModal(), 50);
+    } else {
+      navigate(-1);
+    }
+  };
+
   const handleSelectAddress = (addr: SavedAddressItem) => {
     updateUser({ location: addr.shortLocation });
     updateDraftJob({ location: addr.shortLocation });
     showToast(`Location set to ${addr.label} (${addr.shortLocation})`);
-    navigate(-1);
+    finishLocationSelection();
   };
 
   const handleUseCurrentLocation = () => {
@@ -92,14 +112,14 @@ export const SelectLocationPage: React.FC = () => {
     updateUser({ location: loc });
     updateDraftJob({ location: loc });
     showToast('Detected current location via GPS');
-    navigate(-1);
+    finishLocationSelection();
   };
 
   const handleSelectSearchResult = (result: typeof REAL_SEARCH_SUGGESTIONS[0]) => {
     updateUser({ location: result.name });
     updateDraftJob({ location: result.name });
     showToast(`Location set to ${result.name}`);
-    navigate(-1);
+    finishLocationSelection();
   };
 
   const handleSaveNewAddress = (e: React.FormEvent) => {
@@ -125,7 +145,7 @@ export const SelectLocationPage: React.FC = () => {
     setNewHouseNo('');
     setNewStreet('');
     showToast(`${newLabel} address saved and selected`);
-    navigate(-1);
+    finishLocationSelection();
   };
 
   const filteredSuggestions = REAL_SEARCH_SUGGESTIONS.filter(item =>
@@ -139,7 +159,12 @@ export const SelectLocationPage: React.FC = () => {
       <button
         type="button"
         onClick={() => {
-          if (window.history.length > 1) {
+          if (onClose) {
+            onClose();
+          } else if (returnToModal) {
+            navigate('/');
+            setTimeout(() => openCreateJobModal(), 50);
+          } else if (window.history.length > 1) {
             navigate(-1);
           } else {
             navigate('/profile');
@@ -152,8 +177,8 @@ export const SelectLocationPage: React.FC = () => {
         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
       </button>
 
-      {/* Header title at mt-22 starting at the same level as the cards */}
-      <div className="mt-22 mb-3 select-none">
+      {/* Header title */}
+      <div className={`${isOverlay ? 'mt-16' : 'mt-22'} mb-3 select-none`}>
         <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
           Select a location
         </h1>

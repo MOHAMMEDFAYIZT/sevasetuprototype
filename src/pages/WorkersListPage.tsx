@@ -10,7 +10,7 @@ export const WorkersListPage: React.FC = () => {
     selectedWorkerIds, 
     toggleWorkerSelection, 
     draftJob,
-    openCreateJobModal,
+    openEditDraftJobModal,
     favourites, 
     toggleFavourite, 
     createJobWithRequests,
@@ -48,7 +48,7 @@ export const WorkersListPage: React.FC = () => {
       navigate(`/jobs/${targetJob.id}`);
     } else {
       navigate('/');
-      openCreateJobModal(activeCategory || 'Electrician');
+      openEditDraftJobModal();
     }
   };
 
@@ -113,13 +113,30 @@ export const WorkersListPage: React.FC = () => {
       </button>
 
       {/* Header title at mt-22 starting at the same level as the cards */}
-      <div className="mt-22 mb-3 select-none">
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
-          {isRequestMoreMode && targetJob 
-            ? `Request More ${targetJob.category} Workers`
-            : `${selectedCategory || 'Worker'}s Near You`
-          }
-        </h1>
+      <div className="mt-22 mb-3 select-none flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-[#16261E] tracking-tight leading-tight">
+            {isRequestMoreMode && targetJob 
+              ? `Request More ${targetJob.category} Workers`
+              : `${selectedCategory || 'Worker'}s Near You`
+            }
+          </h1>
+          {!isRequestMoreMode && (
+            <p className="text-xs text-[#4F6057] font-medium mt-0.5">
+              Select {neededCount} worker{neededCount > 1 ? 's' : ''} for your job
+            </p>
+          )}
+        </div>
+
+        {!isRequestMoreMode && (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="text-[11px] font-bold text-[#0C6B44] bg-[#E2F3DD] hover:bg-[#D2ECD6] px-3 py-1.5 rounded-full border border-[#BDDEC4] shrink-0 transition-all cursor-pointer shadow-2xs active:scale-95"
+          >
+            Change Details
+          </button>
+        )}
       </div>
 
       {/* Workers Cards List */}
