@@ -59,6 +59,8 @@ export interface Job {
   requests: WorkerRequest[];
   rating: number | null;
   createdAt: string;
+  workScheduleType?: 'partial' | 'full';
+  expectedDurationDays?: number;
 }
 
 export interface DraftJob {
@@ -72,6 +74,8 @@ export interface DraftJob {
   wageMin: number;
   wageMax: number;
   workersNeeded?: number;
+  workScheduleType?: 'partial' | 'full';
+  expectedDurationDays?: number;
 }
 
 export type AppScreen = 

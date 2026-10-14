@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { WORKERS_DATABASE } from '../../data/mockData';
+import { WORKERS_DATABASE, getDefaultWorkSchedule } from '../../data/mockData';
 import { 
   X, 
   Calendar, 
   Clock,
+  CalendarClock,
+  Sun,
   Mic, 
   Square, 
   Play, 
@@ -275,6 +277,18 @@ export const JobDetailsModal: React.FC = () => {
     navigate('/workers');
   };
 
+  const currentWorkSchedule: 'partial' | 'full' = draftJob.workScheduleType || getDefaultWorkSchedule(selectedCategory);
+  const durationDays = draftJob.expectedDurationDays || 1;
+
+  const handleSelectWorkSchedule = (type: 'partial' | 'full') => {
+    updateDraftJob({ workScheduleType: type });
+  };
+
+  const handleUpdateDuration = (newDays: number) => {
+    const clamped = Math.max(1, Math.min(30, newDays));
+    updateDraftJob({ expectedDurationDays: clamped });
+  };
+
   const categoryKey = (selectedCategory || 'Electrician').toLowerCase().replace(/\s+/g, '-');
   const serviceImg = SERVICE_ILLUSTRATIONS[categoryKey] || SERVICE_ILLUSTRATIONS['electrician'];
 
@@ -409,7 +423,128 @@ export const JobDetailsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* 3. Workers Needed Stepper Card */}
+          {/* 3. Work Schedule Card */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] space-y-2.5 shadow-2xs">
+            {/* Heading */}
+            <div className="flex items-center gap-2">
+              <CalendarClock className="w-4 h-4 text-[#0C6B44] stroke-[2.2]" />
+              <span className="font-display font-bold text-xs sm:text-[13px] text-[#16261E]">
+                Work Schedule
+              </span>
+            </div>
+
+            {/* Selection Cards (Partial vs Full day) */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Partial Day Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectWorkSchedule('partial')}
+                className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 shadow-2xs select-none active:scale-[0.98] ${
+                  currentWorkSchedule === 'partial'
+                    ? 'bg-[#E2F3DD] border-2 border-[#0C6B44]'
+                    : 'bg-white border-[#E3ECE0] hover:border-[#CBD8CA]'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${
+                    currentWorkSchedule === 'partial'
+                      ? 'bg-white border-[#A7D8A1] text-[#0C6B44]'
+                      : 'bg-[#F6FAF4] border-[#E3ECE0] text-[#76857D]'
+                  }`}>
+                    <Clock className="w-4 h-4 stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-display font-bold text-xs sm:text-[13px] text-[#16261E] block leading-tight truncate">
+                      Partial day
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-[#76857D] block leading-tight mt-0.5 font-normal truncate">
+                      A few hours
+                    </span>
+                  </div>
+                </div>
+                {currentWorkSchedule === 'partial' && (
+                  <div className="w-4 h-4 rounded-full bg-[#0C6B44] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </div>
+                )}
+              </button>
+
+              {/* Full Day Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectWorkSchedule('full')}
+                className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 shadow-2xs select-none active:scale-[0.98] ${
+                  currentWorkSchedule === 'full'
+                    ? 'bg-[#E2F3DD] border-2 border-[#0C6B44]'
+                    : 'bg-white border-[#E3ECE0] hover:border-[#CBD8CA]'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${
+                    currentWorkSchedule === 'full'
+                      ? 'bg-white border-[#A7D8A1] text-[#0C6B44]'
+                      : 'bg-[#F6FAF4] border-[#E3ECE0] text-[#76857D]'
+                  }`}>
+                    <Sun className="w-4 h-4 stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-display font-bold text-xs sm:text-[13px] text-[#16261E] block leading-tight truncate">
+                      Full day
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-[#76857D] block leading-tight mt-0.5 font-normal truncate">
+                      A full day's work
+                    </span>
+                  </div>
+                </div>
+                {currentWorkSchedule === 'full' && (
+                  <div className="w-4 h-4 rounded-full bg-[#0C6B44] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </div>
+                )}
+              </button>
+            </div>
+
+            {/* Dynamic Expected Duration Row (Only when Full day is selected) */}
+            {currentWorkSchedule === 'full' && (
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-[#E3ECE0] flex items-center justify-between gap-3 shadow-2xs animate-fade-in">
+                <div className="min-w-0 flex-1">
+                  <span className="font-bold text-xs sm:text-[13px] text-[#16261E] block truncate">
+                    Expected duration
+                  </span>
+                  <span className="text-[11px] text-[#76857D] block truncate mt-0.5 font-normal">
+                    Estimated number of days
+                  </span>
+                </div>
+
+                {/* Duration Stepper Pill */}
+                <div className="flex items-center bg-white border border-[#CBD8CA] rounded-full p-1 shadow-2xs shrink-0">
+                  <button
+                    type="button"
+                    disabled={durationDays <= 1}
+                    onClick={() => handleUpdateDuration(durationDays - 1)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                    aria-label="Decrease days"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="w-7 text-center font-display text-xs sm:text-sm font-bold text-[#16261E]">
+                    {durationDays}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={durationDays >= 30}
+                    onClick={() => handleUpdateDuration(durationDays + 1)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[#16261E] hover:bg-[#E2F3DD] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+                    aria-label="Increase days"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. Workers Needed Stepper Card */}
           {!targetWorker && (
             <div className="p-3 sm:p-3.5 rounded-2xl bg-[#F6FAF4] border border-[#E3ECE0] flex items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">

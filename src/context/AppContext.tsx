@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { UserProfile, Job, AppScreen, Worker } from '../types';
-import { INITIAL_JOBS, WORKERS_DATABASE } from '../data/mockData';
+import { INITIAL_JOBS, WORKERS_DATABASE, getDefaultWorkSchedule } from '../data/mockData';
 import { TRANSLATIONS, type Language } from '../utils/translations';
 import { isJobUrgent, getUrgentJobTimeRemaining } from '../utils/urgency';
 
@@ -17,6 +17,8 @@ interface DraftJob {
   hasVoiceNote?: boolean;
   voiceNoteDuration?: string;
   workersNeeded?: number;
+  workScheduleType?: 'partial' | 'full';
+  expectedDurationDays?: number;
 }
 
 interface AppContextType {
@@ -105,17 +107,29 @@ interface AppContextType {
   resetDemoData: () => void;
 }
 
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try { return localStorage.getItem(key); } catch { return null; }
+  },
+  setItem: (key: string, val: string) => {
+    try { localStorage.setItem(key, val); } catch {}
+  },
+  removeItem: (key: string) => {
+    try { localStorage.removeItem(key); } catch {}
+  }
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('SEVA_SETU_LANG') as Language;
+    const saved = safeStorage.getItem('SEVA_SETU_LANG') as Language;
     return (saved === 'hi' || saved === 'en') ? saved : 'en';
   });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('SEVA_SETU_LANG', lang);
+    safeStorage.setItem('SEVA_SETU_LANG', lang);
   };
 
   const t = (key: string): string => {
@@ -123,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('SEVA_SETU_USER_PROD');
+    const saved = safeStorage.getItem('SEVA_SETU_USER_PROD');
     return saved ? JSON.parse(saved) : {
       name: 'Manoj Kumar',
       phone: '9876543210',
@@ -145,7 +159,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     description: '',
     wageMin: 350,
     wageMax: 500,
-    workersNeeded: 1
+    workersNeeded: 1,
+    workScheduleType: 'partial',
+    expectedDurationDays: 1
   });
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
@@ -165,10 +181,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'SEVA_SETU_JOBS_V10',
       'SEVA_SETU_JOBS_PROD'
     ].forEach(k => {
-      try { localStorage.removeItem(k); } catch { /* ignore */ }
+      safeStorage.removeItem(k);
     });
 
-    const saved = localStorage.getItem('SEVA_SETU_JOBS_V11');
+    const saved = safeStorage.getItem('SEVA_SETU_JOBS_V11');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -207,11 +223,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem('SEVA_SETU_USER_PROD', JSON.stringify(user));
+    safeStorage.setItem('SEVA_SETU_USER_PROD', JSON.stringify(user));
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('SEVA_SETU_JOBS_V11', JSON.stringify(jobs));
+    safeStorage.setItem('SEVA_SETU_JOBS_V11', JSON.stringify(jobs));
   }, [jobs]);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -304,7 +320,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: 'pending'
       })),
       rating: null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      workScheduleType: draftJob.workScheduleType || getDefaultWorkSchedule(draftJob.category),
+      expectedDurationDays: draftJob.workScheduleType === 'full' ? (draftJob.expectedDurationDays || 1) : undefined
     };
 
     setJobs(prev => [newJob, ...prev]);
@@ -657,6 +675,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setSelectedCategory(finalCategory);
     setSelectedWorkerIds([]);
+    const defaultSchedule = getDefaultWorkSchedule(finalCategory);
     setDraftJob(prev => ({
       category: finalCategory,
       date: new Date().toISOString().split('T')[0],
@@ -669,7 +688,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       wageMax: 500,
       hasVoiceNote: false,
       voiceNoteDuration: undefined,
-      workersNeeded: 1
+      workersNeeded: 1,
+      workScheduleType: defaultSchedule,
+      expectedDurationDays: 1
     }));
     setIsCreateJobModalOpen(true);
   };
@@ -697,7 +718,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       wageMax: 500,
       hasVoiceNote: job.hasVoiceNote,
       voiceNoteDuration: job.voiceNoteDuration,
-      workersNeeded: Math.max(1, job.requests.length)
+      workersNeeded: Math.max(1, job.requests.length),
+      workScheduleType: job.workScheduleType || getDefaultWorkSchedule(job.category),
+      expectedDurationDays: job.expectedDurationDays || 1
     });
     setIsCreateJobModalOpen(true);
   };
@@ -742,8 +765,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetDemoData = () => {
-    localStorage.removeItem('SEVA_SETU_USER_PROD');
-    localStorage.removeItem('SEVA_SETU_JOBS_V11');
+    safeStorage.removeItem('SEVA_SETU_USER_PROD');
+    safeStorage.removeItem('SEVA_SETU_JOBS_V11');
     setUser({
       name: 'Manoj Kumar',
       phone: '9876543210',

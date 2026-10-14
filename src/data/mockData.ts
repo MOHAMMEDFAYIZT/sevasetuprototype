@@ -97,6 +97,34 @@ export const RURAL_LOCATIONS: string[] = [
   'Mannarkkad'
 ];
 
+export const SERVICE_WORK_SCHEDULE_DEFAULTS: Record<string, 'partial' | 'full'> = {
+  // Most Searched
+  'electrician': 'partial',
+  'plumber': 'partial',
+  'cleaning': 'partial',
+  'carpenter': 'full',
+  // Other Services
+  'painter': 'full',
+  'gardening': 'full',
+  'farm-work': 'full',
+  'farm work': 'full',
+  'mechanic': 'partial',
+  'cooking': 'full',
+  'transport': 'partial',
+  'animal-care': 'full',
+  'animal care': 'full',
+  'general-labour': 'full',
+  'general labour': 'full',
+  'tailor': 'partial'
+};
+
+export const getDefaultWorkSchedule = (category?: string): 'partial' | 'full' => {
+  if (!category) return 'partial';
+  const clean = category.toLowerCase().trim();
+  const slug = clean.replace(/\s+/g, '-');
+  return SERVICE_WORK_SCHEDULE_DEFAULTS[slug] || SERVICE_WORK_SCHEDULE_DEFAULTS[clean] || 'partial';
+};
+
 export const WORKERS_DATABASE: Worker[] = [
   { 
     id: 1, 
