@@ -1,32 +1,61 @@
-# React + TypeScript + Vite
+# Seva Setu — Frontend Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Seva Setu is a frontend prototype exploring a way to connect people who need local services with nearby workers. The interface demonstrates customer-facing job creation and worker discovery workflows.
 
-Currently, two official plugins are available:
+<sub>Status: frontend prototype with mock data. This repository is not a production platform and does not provide a live backend, real worker accounts, or real job dispatch.</sub>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prototype flows
 
-## React Compiler
+- **Onboarding screens:** Splash, login, OTP verification, and profile setup interfaces.
+- **Worker discovery:** Browse a sample worker directory and open worker profiles.
+- **Job creation:** Configure a job with category, schedule, location, description, and wage range.
+- **Worker selection:** Select workers, manage favorites, and simulate sending job requests.
+- **Job management:** View job details, active and past jobs, and notification screens.
+- **Interaction states:** Confirmation dialogs, cancellation and completion flows, ratings, and toast feedback.
+- **Preferences:** English and Hindi interface text, with selected demo state persisted in browser storage.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Technology
 
-## Expanding the Oxlint configuration
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Tailwind CSS
+- Lucide React
+- Browser localStorage for demo persistence
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Important implementation boundary
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+The current prototype uses local mock data and client-side state. Actions such as creating jobs, requesting workers, and simulating worker acceptance demonstrate the intended user experience only. They do not contact real workers or create records on a production server.
+
+Authentication screens are visual prototype flows; OTP verification is not connected to a real authentication provider.
+
+## Run locally
+
+### Requirements
+
+- Node.js compatible with the Vite version in this project
+- npm
+
+### Setup
+
+```bash
+git clone https://github.com/MOHAMMEDFAYIZT/sevasetuprototype.git
+cd sevasetuprototype
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Project direction
+
+This prototype is an exploration of the user experience for a local-services and employment platform. A production version would require a backend, real authentication, persistent server-side data, location-aware matching, notifications, and secure job-request workflows.
+
+---
+
+**Developer:** [Mohammed Fayiz T](https://github.com/MOHAMMEDFAYIZT)
