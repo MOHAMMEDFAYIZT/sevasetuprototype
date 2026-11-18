@@ -14,11 +14,11 @@ Explore the hosted prototype: **[sevasetuprototype.vercel.app](https://sevasetup
 
 | Splash Screen | Home Screen |
 | --- | --- |
-| ![Seva Setu splash screen](public/images/mockups/01-splash-screen.png) | ![Seva Setu home screen](public/images/mockups/02-home-screen.png) |
+|<img width="460" height="894" alt="Screenshot from 2026-11-18 21-07-32" src="https://github.com/user-attachments/assets/c3a02a31-8333-4a76-aa48-64d8d862c1de" />|<img width="460" height="894" alt="Screenshot from 2026-11-18 21-07-51" src="https://github.com/user-attachments/assets/623a0cca-3bd3-48e2-a20a-17cf44bcc90e" />|
 
 ### Worker Selection
 
-![Seva Setu worker selection screen](public/images/mockups/03-worker-selection.png)
+<img width="460" height="894" alt="Screenshot from 2026-11-18 21-08-20" src="https://github.com/user-attachments/assets/5abac0a7-ec08-4768-9c55-667a3076e6df" />
 
 ## What the prototype explores
 
