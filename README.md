@@ -4,11 +4,21 @@ A high-fidelity frontend prototype for **Seva Setu**, a concept for connecting p
 
 > **Project status:** UI/UX prototype. This repository showcases the frontend experience and interaction design. It is not a production application and is not connected to a live backend.
 
-## Preview
+## Live Demo
 
-| Home experience | Login flow | Profile setup |
-| --- | --- | --- |
-| ![Home screen](public/images/mockups/5_home.jpg) | ![Login screen](public/images/mockups/2_login.png) | ![Profile setup](public/images/mockups/4_profile.png) |
+Explore the hosted prototype: **[sevasetuprototype.vercel.app](https://sevasetuprototype.vercel.app)**
+
+> The live deployment is a frontend prototype and uses sample data and local demo state.
+
+## Screenshots
+
+| Splash Screen | Home Screen |
+| --- | --- |
+| ![Seva Setu splash screen](public/images/mockups/01-splash-screen.png) | ![Seva Setu home screen](public/images/mockups/02-home-screen.png) |
+
+### Worker Selection
+
+![Seva Setu worker selection screen](public/images/mockups/03-worker-selection.png)
 
 ## What the prototype explores
 
