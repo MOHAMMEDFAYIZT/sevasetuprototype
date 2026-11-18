@@ -1,43 +1,41 @@
 # Seva Setu — Frontend Prototype
 
-Seva Setu is a frontend prototype exploring a way to connect people who need local services with nearby workers. The interface demonstrates customer-facing job creation and worker discovery workflows.
+A high-fidelity frontend prototype for **Seva Setu**, a concept for connecting people who need local services with skilled workers in nearby communities.
 
-<sub>Status: frontend prototype with mock data. This repository is not a production platform and does not provide a live backend, real worker accounts, or real job dispatch.</sub>
+> **Project status:** UI/UX prototype. This repository showcases the frontend experience and interaction design. It is not a production application and is not connected to a live backend.
 
-## Prototype flows
+## Preview
 
-- **Onboarding screens:** Splash, login, OTP verification, and profile setup interfaces.
-- **Worker discovery:** Browse a sample worker directory and open worker profiles.
-- **Job creation:** Configure a job with category, schedule, location, description, and wage range.
-- **Worker selection:** Select workers, manage favorites, and simulate sending job requests.
-- **Job management:** View job details, active and past jobs, and notification screens.
-- **Interaction states:** Confirmation dialogs, cancellation and completion flows, ratings, and toast feedback.
-- **Preferences:** English and Hindi interface text, with selected demo state persisted in browser storage.
+| Home experience | Login flow | Profile setup |
+| --- | --- | --- |
+| ![Home screen](public/images/mockups/5_home.jpg) | ![Login screen](public/images/mockups/2_login.png) | ![Profile setup](public/images/mockups/4_profile.png) |
 
-## Technology
+## What the prototype explores
+
+- **Onboarding experience** — splash screen, login, OTP entry, and profile setup.
+- **Service discovery** — browse service categories and explore a sample worker directory.
+- **Worker profiles** — view sample worker information and manage favorites.
+- **Job creation flow** — configure a service request with category, schedule, location, description, and wage range.
+- **Worker selection** — select workers and simulate sending job requests.
+- **Job management** — explore active and past jobs, job details, and notifications.
+- **Interaction design** — confirmation dialogs, cancellation and completion states, ratings, and toast feedback.
+- **Responsive interface** — layouts designed for a mobile-first local-services experience.
+
+All displayed workers and job information are sample data. Interactions are demonstrations of the intended product experience.
+
+## Tech stack
 
 - React 19
 - TypeScript
 - Vite
 - React Router
-- Tailwind CSS
+- Tailwind CSS 4
 - Lucide React
-- Browser localStorage for demo persistence
-
-## Important implementation boundary
-
-The current prototype uses local mock data and client-side state. Actions such as creating jobs, requesting workers, and simulating worker acceptance demonstrate the intended user experience only. They do not contact real workers or create records on a production server.
-
-Authentication screens are visual prototype flows; OTP verification is not connected to a real authentication provider.
+- Browser localStorage for prototype state
 
 ## Run locally
 
-### Requirements
-
-- Node.js compatible with the Vite version in this project
-- npm
-
-### Setup
+**Requirements:** Node.js and npm.
 
 ```bash
 git clone https://github.com/MOHAMMEDFAYIZT/sevasetuprototype.git
@@ -52,10 +50,14 @@ Create a production build:
 npm run build
 ```
 
-## Project direction
+## Prototype boundary
 
-This prototype is an exploration of the user experience for a local-services and employment platform. A production version would require a backend, real authentication, persistent server-side data, location-aware matching, notifications, and secure job-request workflows.
+This repository focuses on the frontend prototype. Authentication and OTP screens are visual flows; job creation, worker selection, notifications, and other actions use local demo state. There is no live authentication provider, backend API, real worker dispatch, or production data persistence.
 
----
+The repository also retains standalone HTML exports and supporting design assets used during prototyping.
 
-**Developer:** [Mohammed Fayiz T](https://github.com/MOHAMMEDFAYIZT)
+## About
+
+**Seva Setu** explores a digital way to make local services easier to discover and access, while helping skilled workers connect with opportunities in their communities.
+
+Developed by [Mohammed Fayiz T](https://github.com/MOHAMMEDFAYIZT).
